@@ -26,10 +26,15 @@ export default function Login() {
         csrfUseCache: false // 作为请求控制项单独放到 options 里
       })
 
-      console.log(res.code)
-      if (res.code == 200) {
-        router.navigate({ to: "/" })
+      if (res.code === 200) {
+        const target = res.data.targetUrl;
+        if (target) {
+          window.location.href = target;
+        } else {
+          router.navigate({ to: "/" });
+        }
       }
+
       if (res.code != 200) {
         setError(res.msg)
       }
@@ -73,10 +78,11 @@ export default function Login() {
 
             <div className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="user">邮箱</Label>
+                <Label htmlFor="username">邮箱</Label>
                 <Input
                   id="username"
                   type="username"
+                  autoComplete="username"
                   placeholder="your@user.com"
                   required
                   value={username}

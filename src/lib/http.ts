@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE || '/oauth2-server'
+const BASE_URL = import.meta.env.VITE_API_BASE || '/oauth2-service'
 
 export type RequestOptions = RequestInit & {
     csrf?: boolean,
@@ -23,6 +23,9 @@ async function getCsrfToken(useCache = true): Promise<{ token: string; headerNam
     }
     if (useCache) {
         sessionStorage.setItem('csrfToken', JSON.stringify(tokenInfo))
+    }
+    if (!useCache) {
+        sessionStorage.removeItem('csrfToken')
     }
     return tokenInfo
 }
