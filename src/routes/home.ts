@@ -1,6 +1,6 @@
 // src/routes/home.route.ts
 import { createRoute, redirect } from '@tanstack/react-router'
-import Home from '../page/Home'
+import home from '../page/home'
 import { rootRoute } from './router'
 import { isAuthenticated } from './auth'
 
@@ -8,7 +8,7 @@ import { isAuthenticated } from './auth'
 export const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: Home,
+  component: home,
   beforeLoad: async () => {
     const authed = await isAuthenticated()
     if (!authed) {
