@@ -112,7 +112,18 @@ export default function Login() {
               {error && (
                 <div className="text-sm text-red-500 text-center">{error}</div>
               )}
-
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  name="remember-me"
+                  className="size-4 accent-primary"
+                  defaultChecked
+                />
+                <Label htmlFor="rememberMe" className="text-sm">
+                  记住我
+                </Label>
+              </div>
               <Button type="submit" className="w-full" onClick={handleSubmit}>
                 登录
               </Button>
