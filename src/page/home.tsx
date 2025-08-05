@@ -31,12 +31,20 @@ export default function Home() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">🏠 Home</h1>
 
-        <button
-          onClick={handleLogout}
-          className="text-blue-500 underline"
-        >
-          Logout
-        </button>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => navigate({ to: "/profile" })}
+            className="text-blue-500 underline"
+          >
+            用户信息
+          </button>
+          <button
+            onClick={handleLogout}
+            className="text-blue-500 underline"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {error && <div className="text-red-600">{error}</div>}
