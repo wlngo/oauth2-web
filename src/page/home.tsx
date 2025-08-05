@@ -12,7 +12,7 @@ export default function Home() {
       const res = await request("/logout", {
         method: "POST",
         csrf: true,
-        csrfUseCache: true,
+        csrfUseCache: false,
       });
 
       if (res.code == 200) {
