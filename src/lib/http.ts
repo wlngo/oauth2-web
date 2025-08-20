@@ -13,7 +13,7 @@ async function getCsrfToken(useCache = true): Promise<{ token: string; headerNam
             return JSON.parse(cached)
         }
     }
-    const res = await fetch(`${BASE_URL}/csrf`, { credentials: 'include' })
+    const res = await fetch(`${BASE_URL}/csrf`, {credentials: 'include'})
     if (!res.ok) throw new Error('Failed to fetch CSRF token')
 
     const data = await res.json()
@@ -37,13 +37,13 @@ async function attachCsrfToken(
     useCache: boolean = true
 ) {
     if (enable) {
-        const { token, headerName } = await getCsrfToken(useCache)
+        const {token, headerName} = await getCsrfToken(useCache)
         headers[headerName] = token
     }
 }
 
 // JSON 请求
-export async function request<T = any>(
+export async function request<T = unknown>(
     url: string,
     options: RequestOptions = {}
 ): Promise<T> {
@@ -70,9 +70,9 @@ export async function request<T = any>(
 }
 
 // x-www-form-urlencoded 请求
-export async function formRequest<T = any>(
+export async function formRequest<T = unknown>(
     url: string,
-    formData: Record<string, any>,
+    formData: Record<string, unknown>,
     options: RequestOptions = {}
 ): Promise<T> {
     const headers: Record<string, string> = {
@@ -108,7 +108,7 @@ export async function formRequest<T = any>(
 }
 
 // multipart/form-data 请求
-export async function multipartRequest<T = any>(
+export async function multipartRequest<T = unknown>(
     url: string,
     formData: FormData,
     options: RequestOptions = {}
@@ -136,9 +136,9 @@ export async function multipartRequest<T = any>(
     return response.json()
 }
 
-export async function getRequest<T = any>(
+export async function getRequest<T = unknown>(
     url: string,
-    params?: Record<string, any>,
+    params?: Record<string, unknown>,
     options: RequestOptions = {}
 ): Promise<T> {
     const headers: Record<string, string> = {
