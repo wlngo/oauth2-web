@@ -5,6 +5,11 @@ import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {User, LogOut, House} from "lucide-react"
 
+interface LogoutResponse {
+    code: number
+    msg?: string
+}
+
 export default function Home() {
     const navigate = useNavigate()
     const [error, setError] = useState("")
@@ -12,7 +17,7 @@ export default function Home() {
     const handleLogout = async () => {
         setError("")
         try {
-            const res = await request("/logout", {
+            const res = await request<LogoutResponse>("/logout", {
                 method: "POST",
                 csrf: true,
                 csrfUseCache: false,

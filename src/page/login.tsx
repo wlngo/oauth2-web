@@ -8,6 +8,14 @@ import {formRequest} from "@/lib/http"
 import {cn} from "@/lib/utils"
 import placeholder from "@/assets/placeholder.svg"
 
+type LoginResponse = {
+    code: number
+    data: {
+        targetUrl?: string
+    }
+    msg: string // 移除可选标记，确保 msg 字段存在
+}
+
 export default function Login() {
     const router = useRouter()
     const [username, setUsername] = useState("")
@@ -18,14 +26,13 @@ export default function Login() {
         e.preventDefault()
         setError("")
         try {
-            const res = await formRequest('/login', {
+            const res = await formRequest<LoginResponse>('/login', {
                 username: username,
                 password: password,
             }, {
                 csrf: true,
                 csrfUseCache: false // 作为请求控制项单独放到 options 里
             })
-
             if (res.code === 200) {
                 const target = res.data.targetUrl;
                 if (target) {

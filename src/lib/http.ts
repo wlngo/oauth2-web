@@ -43,7 +43,7 @@ async function attachCsrfToken(
 }
 
 // JSON 请求
-export async function request<T = unknown>(
+export async function request<T>(
     url: string,
     options: RequestOptions = {}
 ): Promise<T> {
@@ -70,9 +70,9 @@ export async function request<T = unknown>(
 }
 
 // x-www-form-urlencoded 请求
-export async function formRequest<T = unknown>(
+export async function formRequest<T>(
     url: string,
-    formData: Record<string, unknown>,
+    formData: Record<string, string | number | boolean>,
     options: RequestOptions = {}
 ): Promise<T> {
     const headers: Record<string, string> = {
@@ -108,7 +108,7 @@ export async function formRequest<T = unknown>(
 }
 
 // multipart/form-data 请求
-export async function multipartRequest<T = unknown>(
+export async function multipartRequest<T>(
     url: string,
     formData: FormData,
     options: RequestOptions = {}
@@ -136,9 +136,9 @@ export async function multipartRequest<T = unknown>(
     return response.json()
 }
 
-export async function getRequest<T = unknown>(
+export async function getRequest<T>(
     url: string,
-    params?: Record<string, unknown>,
+    params?: Record<string, T>,
     options: RequestOptions = {}
 ): Promise<T> {
     const headers: Record<string, string> = {
