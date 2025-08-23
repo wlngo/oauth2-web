@@ -55,7 +55,7 @@ export default function Home() {
                             className="flex items-center gap-2"
                         >
                             <LogOut className="h-4 w-4"/>
-                            登出
+                            登出账户
                         </Button>
                     </div>
                 </div>
@@ -81,14 +81,6 @@ export default function Home() {
                                 >
                                     <User className="h-4 w-4"/>
                                     查看个人资料
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={handleLogout}
-                                    className="flex items-center gap-2"
-                                >
-                                    <LogOut className="h-4 w-4"/>
-                                    登出账户
                                 </Button>
                             </div>
                         </CardContent>

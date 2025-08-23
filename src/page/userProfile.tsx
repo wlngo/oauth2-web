@@ -5,26 +5,25 @@ import {Button} from "@/components/ui/button"
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import {Badge} from "@/components/ui/badge"
 import {Separator} from "@/components/ui/separator"
-import {getRequest} from "@/lib/http"
+import {request} from "@/lib/http"
 import {User, Mail, Calendar, Shield, ArrowLeft, Settings} from "lucide-react"
 
 interface UserInfo {
-    id?: string
+    userId?: string
     username?: string
+    password?: string
+    nickName?: string
+    realName?: string
     email?: string
-    fullName?: string
-    avatar?: string
-    roles?: string[]
-    authorities?: string[]
+    emailVerified?: boolean
+    phoneNumber?: string
+    phoneNumberVerified?: boolean
+    gender?: number
+    birthdate?: string
+    avatarUrl?: string
     createdAt?: string
-    lastLoginAt?: string
-    profile?: {
-        firstName?: string
-        lastName?: string
-        phoneNumber?: string
-        department?: string
-        jobTitle?: string
-    }
+    updatedAt?: string
+    authorities?: string[]
 }
 
 export default function UserProfile() {
@@ -40,7 +39,8 @@ export default function UserProfile() {
     const fetchUserInfo = async () => {
         try {
             setLoading(true)
-            const response = await getRequest('/api/auth/me', {}, {
+            const response = await request('/api/auth/userinfo', {
+                method: 'POST',
                 csrf: true,
                 csrfUseCache: false
             })
@@ -71,6 +71,15 @@ export default function UserProfile() {
             })
         } catch {
             return dateString
+        }
+    }
+
+    const getGenderText = (gender?: number) => {
+        switch (gender) {
+            case 0: return "女"
+            case 1: return "男"
+            case 2: return "其他"
+            default: return "未设置"
         }
     }
 
@@ -134,34 +143,24 @@ export default function UserProfile() {
                             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                                 <Avatar className="h-24 w-24">
                                     <AvatarImage
-                                        src={userInfo?.avatar}
-                                        alt={userInfo?.fullName || userInfo?.username}
+                                        src={userInfo?.avatarUrl}
+                                        alt={userInfo?.nickName || userInfo?.username}
                                     />
                                     <AvatarFallback
                                         className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
-                                        {getInitials(userInfo?.fullName || userInfo?.username)}
+                                        {getInitials(userInfo?.nickName || userInfo?.realName || userInfo?.username)}
                                     </AvatarFallback>
                                 </Avatar>
 
                                 <div className="flex-1 space-y-2">
                                     <div>
                                         <h2 className="text-2xl font-bold text-gray-900">
-                                            {userInfo?.fullName || userInfo?.profile?.firstName + " " + userInfo?.profile?.lastName || userInfo?.username || "用户"}
+                                            {userInfo?.nickName || userInfo?.realName || userInfo?.username || "用户"}
                                         </h2>
-                                        {userInfo?.profile?.jobTitle && (
-                                            <p className="text-gray-600">{userInfo.profile.jobTitle}</p>
-                                        )}
-                                        {userInfo?.profile?.department && (
-                                            <p className="text-sm text-gray-500">{userInfo.profile.department}</p>
-                                        )}
+                                        <p className="text-gray-600">用户ID: {userInfo?.userId}</p>
                                     </div>
 
                                     <div className="flex flex-wrap gap-2">
-                                        {userInfo?.roles?.map((role, index) => (
-                                            <Badge key={index} variant="secondary">
-                                                {role}
-                                            </Badge>
-                                        ))}
                                         {userInfo?.authorities?.map((auth, index) => (
                                             <Badge key={index} variant="outline">
                                                 {auth}
@@ -192,16 +191,33 @@ export default function UserProfile() {
                                     <Separator/>
 
                                     <div>
-                                        <label className="text-sm font-medium text-gray-500">用户ID</label>
-                                        <p className="text-gray-900 font-mono text-sm">{userInfo?.id || "未知"}</p>
+                                        <label className="text-sm font-medium text-gray-500">昵称</label>
+                                        <p className="text-gray-900">{userInfo?.nickName || "未设置"}</p>
                                     </div>
 
-                                    {userInfo?.profile?.phoneNumber && (
+                                    {userInfo?.realName && (
                                         <>
                                             <Separator/>
                                             <div>
-                                                <label className="text-sm font-medium text-gray-500">手机号码</label>
-                                                <p className="text-gray-900">{userInfo.profile.phoneNumber}</p>
+                                                <label className="text-sm font-medium text-gray-500">真实姓名</label>
+                                                <p className="text-gray-900">{userInfo.realName}</p>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <Separator/>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-500">性别</label>
+                                        <p className="text-gray-900">{getGenderText(userInfo?.gender)}</p>
+                                    </div>
+
+                                    {userInfo?.birthdate && (
+                                        <>
+                                            <Separator/>
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-500">生日</label>
+                                                <p className="text-gray-900">{formatDate(userInfo.birthdate)}</p>
                                             </div>
                                         </>
                                     )}
@@ -221,17 +237,25 @@ export default function UserProfile() {
                                 <div className="space-y-3">
                                     <div>
                                         <label className="text-sm font-medium text-gray-500">邮箱地址</label>
-                                        <p className="text-gray-900">{userInfo?.email || "未设置"}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-gray-900">{userInfo?.email || "未设置"}</p>
+                                            {userInfo?.emailVerified && (
+                                                <Badge variant="secondary" className="text-xs">已验证</Badge>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    {(userInfo?.profile?.firstName || userInfo?.profile?.lastName) && (
+                                    {userInfo?.phoneNumber && (
                                         <>
                                             <Separator/>
                                             <div>
-                                                <label className="text-sm font-medium text-gray-500">姓名</label>
-                                                <p className="text-gray-900">
-                                                    {[userInfo?.profile?.firstName, userInfo?.profile?.lastName].filter(Boolean).join(" ") || "未设置"}
-                                                </p>
+                                                <label className="text-sm font-medium text-gray-500">手机号码</label>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-gray-900">{userInfo.phoneNumber}</p>
+                                                    {userInfo?.phoneNumberVerified && (
+                                                        <Badge variant="secondary" className="text-xs">已验证</Badge>
+                                                    )}
+                                                </div>
                                             </div>
                                         </>
                                     )}
@@ -250,18 +274,8 @@ export default function UserProfile() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="text-sm font-medium text-gray-500">账户角色</label>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {userInfo?.roles?.length ? (
-                                                userInfo.roles.map((role, index) => (
-                                                    <Badge key={index} variant="secondary" className="text-xs">
-                                                        {role}
-                                                    </Badge>
-                                                ))
-                                            ) : (
-                                                <span className="text-gray-400 text-sm">无角色信息</span>
-                                            )}
-                                        </div>
+                                        <label className="text-sm font-medium text-gray-500">用户ID</label>
+                                        <p className="text-gray-900 font-mono text-sm">{userInfo?.userId || "未知"}</p>
                                     </div>
 
                                     {userInfo?.authorities?.length && (
@@ -301,8 +315,8 @@ export default function UserProfile() {
                                     <Separator/>
 
                                     <div>
-                                        <label className="text-sm font-medium text-gray-500">最后登录时间</label>
-                                        <p className="text-gray-900">{formatDate(userInfo?.lastLoginAt)}</p>
+                                        <label className="text-sm font-medium text-gray-500">最后更新时间</label>
+                                        <p className="text-gray-900">{formatDate(userInfo?.updatedAt)}</p>
                                     </div>
                                 </div>
                             </CardContent>
