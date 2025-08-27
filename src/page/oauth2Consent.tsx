@@ -22,13 +22,17 @@ type ScopeItem = {
 }
 
 type OAuthScopeResponse = {
-    authorizationEndpoint: string
-    clientId: string
-    clientName: string
-    state: string
-    scopes: ScopeItem[]
-    previouslyApprovedScopes: ScopeItem[]
-    principalName: string
+    code: number
+    data: {
+        authorizationEndpoint: string
+        clientId: string
+        clientName: string
+        state: string
+        scopes: ScopeItem[]
+        previouslyApprovedScopes: ScopeItem[]
+        principalName: string
+    }
+    msg: string // 移除可选标记，确保 msg 字段存在
 }
 
 // === 页面组件 ===
@@ -63,10 +67,10 @@ export default function OAuthAuthorizePage() {
                     {csrf: false, csrfUseCache: false}
                 )
 
-                const data = res.data as OAuthScopeResponse
+                const oAuthScopeResponse = res as OAuthScopeResponse
 
                 // 标准化布尔值字段
-                const normalizedScopes = data.scopes.map((s) => ({
+                const normalizedScopes = oAuthScopeResponse.data.scopes.map((s) => ({
                     ...s,
                     isVisible: Boolean(s.isVisible),
                     isDefault: Boolean(s.isDefault),
@@ -82,11 +86,17 @@ export default function OAuthAuthorizePage() {
                 )
 
                 // 标准化历史授权项
-                const visibleApproved = data.previouslyApprovedScopes
+                const visibleApproved = oAuthScopeResponse.data.previouslyApprovedScopes
                     .map((s) => ({...s, isVisible: Boolean(s.isVisible)}))
                     .filter((s) => s.isVisible)
 
-                setOauthData({...data, previouslyApprovedScopes: visibleApproved})
+                setOauthData({
+                    ...oAuthScopeResponse,
+                    data: {
+                        ...oAuthScopeResponse.data,
+                        previouslyApprovedScopes: visibleApproved,
+                    },
+                })
                 setAllScopes(normalizedScopes)
                 setScopes(visibleScopes)
                 setSelectedScopes(defaultSelected)
@@ -132,19 +142,19 @@ export default function OAuthAuthorizePage() {
                 className="w-full max-w-lg rounded-3xl border border-gray-300 bg-white/95 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
                 <CardHeader className="pb-5 border-b border-gray-300 flex items-center justify-center gap-3">
                     <CardTitle className="text-3xl font-extrabold text-blue-500 tracking-tight flex items-center gap-2">
-                        <span>{oauthData?.clientName || clientIdParam}</span> 请求访问你的账户
+                        <span>{oauthData?.data.clientName || clientIdParam}</span> 请求访问你的账户
                     </CardTitle>
                 </CardHeader>
 
                 <CardContent className="space-y-14">
                     {/* 已授权权限展示 */}
-                    {(oauthData?.previouslyApprovedScopes?.length ?? 0) > 0 && (
+                    {(oauthData?.data.previouslyApprovedScopes?.length ?? 0) > 0 && (
                         <section>
                             <p className="flex justify-center text-sm text-gray-700 mb-5 font-semibold tracking-wide">
                                 你已授权该应用以下权限：
                             </p>
                             <ul className="space-y-4 mb-12">
-                                {(oauthData?.previouslyApprovedScopes ?? []).map((scope) => (
+                                {(oauthData?.data.previouslyApprovedScopes ?? []).map((scope) => (
                                     <li key={scope.scope}
                                         className="flex items-start gap-5 p-3 rounded-lg hover:bg-green-50 transition-colors cursor-default">
                                         <Badge variant="outline"
@@ -256,7 +266,7 @@ export default function OAuthAuthorizePage() {
             </Card>
 
             {/* 隐藏授权表单 */}
-            <form ref={authorizeFormRef} action={oauthData?.authorizationEndpoint || ""} method="POST"
+            <form ref={authorizeFormRef} action={oauthData?.data.authorizationEndpoint || ""} method="POST"
                   style={{display: "none"}}>
                 <input type="hidden" name="client_id" value={clientIdParam}/>
                 <input type="hidden" name="state" value={stateParam}/>
@@ -266,7 +276,7 @@ export default function OAuthAuthorizePage() {
             </form>
 
             {/* 隐藏拒绝表单 */}
-            <form ref={rejectFormRef} action={oauthData?.authorizationEndpoint || ""} method="POST"
+            <form ref={rejectFormRef} action={oauthData?.data.authorizationEndpoint || ""} method="POST"
                   style={{display: "none"}}>
                 <input type="hidden" name="client_id" value={clientIdParam}/>
                 <input type="hidden" name="state" value={stateParam}/>
