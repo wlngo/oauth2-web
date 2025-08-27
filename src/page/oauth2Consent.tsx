@@ -63,7 +63,7 @@ export default function OAuthAuthorizePage() {
                     {csrf: false, csrfUseCache: false}
                 )
 
-                const data = res as OAuthScopeResponse
+                const data = res.data as OAuthScopeResponse
 
                 // 标准化布尔值字段
                 const normalizedScopes = data.scopes.map((s) => ({
