@@ -48,7 +48,7 @@ jobs:
           echo "======================"
           ls -la ${{ github.workspace }}
           rm -rf oauth2/src/main/resources/static/*
-          cp -r  oauth2-web/dist/*  /oauth2/src/main/resources/static/*
+          cp -r  oauth2-web/dist/*  oauth2/src/main/resources/static/*
 
       # 6. Push to target repository
       - name: Push to target repository
