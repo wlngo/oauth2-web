@@ -41,8 +41,7 @@ jobs:
         run: |
           ls -la ${{ github.workspace }}
           rm -rf src/main/resources/static/*
-          ls -la ${{ github.workspace }}/oauth2-web-space/
-          cp -r ${{ github.workspace }}/oauth2-web-space/oauth2-web/disk/* src/main/resources/static/
+          cp -r ${{ github.workspace }}/disk/* src/main/resources/static/
 
       # 8. Push to target repository
       - name: Push to target repository
