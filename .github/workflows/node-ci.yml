@@ -24,7 +24,7 @@ jobs:
 
       - run: npm ci
       - run: npm run build --if-present
-      - run: ls -alh
+      - run: pwd
       # Build artifacts in build directory
       - name: Checkout target repository
         uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
 
       - name: Copy artifacts to target repo static directory
         run: |
-          - run: ls -alh
+          - run: pwd
           rm -rf oauth2/src/main/resources/static
           cp -r ${{ github.workspace }}/disk/* oauth2/src/main/resources/static
 
