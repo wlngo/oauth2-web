@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: disk
-          path: disk
+          path: dist/*
       - run: ls -alh
       # 5. Checkout target repository into a subdirectory to avoid overwriting
       - name: Checkout target repository
