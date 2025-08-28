@@ -17,6 +17,8 @@ jobs:
     steps:
       # 1. Checkout source code
       - uses: actions/checkout@v4
+        with:
+          path: oauth2-web-space
       # 2. Setup Node.js
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -39,6 +41,8 @@ jobs:
       # 7. Copy to static directory
       - name: Copy disk to target repo static directory
         run: |
+          pwd
+          ls
           ls -la ${{ github.workspace }}
           rm -rf src/main/resources/static/*
           cp -r ${{ github.workspace }}/dist/* src/main/resources/static/
