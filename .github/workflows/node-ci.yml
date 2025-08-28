@@ -25,14 +25,14 @@ jobs:
       - run: npm ci
       - run: npm run build --if-present
 
-      # 假设你的构建产物在 build 目录
+      # 构建产物在 build 目录
       - name: Checkout 目标仓库
         uses: actions/checkout@v4
         with:
           repository: wlngo/oauth2
           ref: master                 # 目标分支
           token: ${{ secrets.PUSH_TOKEN }}   # 需要有推送权限的token
-          path: oauth2\src\main\resources\static
+          path: oauth2
 
       - name: 拷贝产物到目标仓库 static 目录
         run: |
