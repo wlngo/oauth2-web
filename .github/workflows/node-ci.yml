@@ -42,8 +42,8 @@ jobs:
       # 5. Copy to static directory
       - name: Copy disk to target repo static directory
         run: |
-          rm -rf ${{ github.workspace }}/oauth2/src/main/resources/static/*
-          cp -r ${{ github.workspace }}/oauth2-web/dist/* ${{ github.workspace }}/oauth2/src/main/resources/static/*
+          rm -rf oauth2/src/main/resources/static/*
+          cp -r  oauth2-web/dist/*  /oauth2/src/main/resources/static/*
 
       # 6. Push to target repository
       - name: Push to target repository
