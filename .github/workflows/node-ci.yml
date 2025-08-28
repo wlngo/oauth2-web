@@ -17,15 +17,12 @@ jobs:
     steps:
       # 1. Checkout source code
       - uses: actions/checkout@v4
-        with:
-          path: oauth2-web-space
       # 2. Setup Node.js
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: oauth2-web-space/oauth2-web/package-lock.json
       # 3. Install dependencies and build
       - run: npm ci
       - run: npm run build --if-present
