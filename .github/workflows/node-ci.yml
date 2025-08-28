@@ -41,7 +41,7 @@ jobs:
         run: |
           ls -la ${{ github.workspace }}
           rm -rf src/main/resources/static/*
-          cp -r ${{ github.workspace }}/disk/* src/main/resources/static/
+          cp -r ${{ github.workspace }}/dist/* src/main/resources/static/
 
       # 8. Push to target repository
       - name: Push to target repository
