@@ -3,7 +3,7 @@ import {request} from "@/lib/http"
 import {useState} from "react"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {User, LogOut, House} from "lucide-react"
+import {User, LogOut, House, Shield} from "lucide-react"
 
 interface LogoutResponse {
     code: number
@@ -36,6 +36,10 @@ export default function Home() {
 
     const goToProfile = () => {
         navigate({to: "/profile"})
+    }
+
+    const goToAdmin = () => {
+        navigate({to: "/admin"})
     }
 
     return (
@@ -87,7 +91,7 @@ export default function Home() {
                     </Card>
 
                     {/* Quick Actions */}
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-3">
                         <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={goToProfile}>
                             <CardContent className="pt-6">
                                 <div className="flex items-center gap-4">
@@ -97,6 +101,20 @@ export default function Home() {
                                     <div>
                                         <h3 className="font-semibold">个人资料</h3>
                                         <p className="text-sm text-gray-600">查看和管理您的个人信息</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={goToAdmin}>
+                            <CardContent className="pt-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 bg-purple-100 rounded-lg">
+                                        <Shield className="h-6 w-6 text-purple-600"/>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold">管理后台</h3>
+                                        <p className="text-sm text-gray-600">系统管理和用户管理</p>
                                     </div>
                                 </div>
                             </CardContent>
