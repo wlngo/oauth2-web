@@ -47,19 +47,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: disk
-          path: oauth2/disk
+          path: oauth2-web/disk
 
       # 7. Copy to static directory
       - name: Copy artifacts to target repo static directory
         run: |
           ls -alh
-          rm -rf oauth2/src/main/resources/static/*
-          cp -r oauth2/disk/* oauth2/src/main/resources/static/
+          rm -rf src/main/resources/static/*
+          cp -r oauth2-web/disk/* src/main/resources/static/
 
       # 8. Push to target repository
       - name: Push to target repository
         run: |
-          cd oauth2
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src/main/resources/static
