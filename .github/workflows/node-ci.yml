@@ -35,7 +35,7 @@ jobs:
         with:
           name: disk
           path: disk
-
+      - run: ls -alh
       # 5. Checkout target repository into a subdirectory to avoid overwriting
       - name: Checkout target repository
         uses: actions/checkout@v4
