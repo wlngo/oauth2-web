@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: oauth2-web-space/package-lock.json
+          cache-dependency-path: oauth2-web/package-lock.json
       # 3. Install dependencies and build
       - run: npm ci
         working-directory: oauth2-web
