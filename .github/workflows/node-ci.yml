@@ -39,17 +39,15 @@ jobs:
           ref: master
           token: ${{ secrets.PUSH_TOKEN }}
           path: oauth2
-      # 7. Copy to static directory
+      # 5. Copy to static directory
       - name: Copy disk to target repo static directory
         run: |
-          pwd
-          ls
-          ls -la ${{ github.workspace }}
-          rm -rf src/main/resources/static/*
-          cp -r ${{ github.workspace }}/dist/* src/main/resources/static/
+          rm -rf ${{ github.workspace }}/oauth2/src/main/resources/static/*
+          cp -r ${{ github.workspace }}/oauth2-web/dist/* ${{ github.workspace }}/oauth2/src/main/resources/static/*
 
-      # 8. Push to target repository
+      # 6. Push to target repository
       - name: Push to target repository
+        working-directory: oauth2
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
