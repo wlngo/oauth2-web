@@ -28,14 +28,12 @@ jobs:
       # 3. Install dependencies and build
       - run: npm ci
       - run: npm run build --if-present
-      - run: ls -alh
       # 4. Upload build artifacts as an artifact
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: disk
           path: dist/*
-      - run: ls -alh
       # 5. Checkout target repository into a subdirectory to avoid overwriting
       - name: Checkout target repository
         uses: actions/checkout@v4
@@ -54,6 +52,7 @@ jobs:
       # 7. Copy to static directory
       - name: Copy artifacts to target repo static directory
         run: |
+          ls -alh
           rm -rf oauth2/src/main/resources/static/*
           cp -r oauth2/disk/* oauth2/src/main/resources/static/
 
