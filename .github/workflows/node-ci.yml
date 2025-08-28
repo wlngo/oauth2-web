@@ -42,7 +42,6 @@ jobs:
       # 5. Copy to static directory
       - name: Copy disk to target repo static directory
         run: |
-          tree
           rm -rf oauth2/src/main/resources/static/*
           cp -r  oauth2-web/dist/*  oauth2/src/main/resources/static/*
 
