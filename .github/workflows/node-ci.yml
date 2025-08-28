@@ -26,6 +26,8 @@ jobs:
       # 3. Install dependencies and build
       - run: npm ci
       - run: npm run build --if-present
+      - run: ls -la
+      - run: pwd
       # 4. Checkout target repository into a subdirectory to avoid overwriting
       - name: Checkout target repository
         uses: actions/checkout@v4
@@ -37,6 +39,7 @@ jobs:
       # 7. Copy to static directory
       - name: Copy disk to target repo static directory
         run: |
+          ls -la ${{ github.workspace }}
           rm -rf src/main/resources/static/*
           ls -la ${{ github.workspace }}/oauth2-web-space/
           cp -r ${{ github.workspace }}/oauth2-web-space/oauth2-web/disk/* src/main/resources/static/
