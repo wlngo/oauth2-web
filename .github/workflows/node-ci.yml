@@ -54,7 +54,7 @@ jobs:
       # 7. Copy to static directory
       - name: Copy artifacts to target repo static directory
         run: |
-          rm -rf oauth2/src/main/resources/static
+          rm -rf oauth2/src/main/resources/static/*
           cp -r oauth2/disk/* oauth2/src/main/resources/static/
 
       # 8. Push to target repository
