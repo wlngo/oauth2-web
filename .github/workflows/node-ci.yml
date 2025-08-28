@@ -19,6 +19,7 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
+          path: oauth2-web
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
@@ -37,7 +38,7 @@ jobs:
       - name: Copy artifacts to target repo static directory
         run: |
           rm -rf oauth2/src/main/resources/static
-          cp -r disk/* oauth2/src/main/resources/static
+          cp -r ${{ github.workspace }}/oauth2-web/disk/* oauth2/src/main/resources/static
 
       - name: Push to target repository
         run: |
