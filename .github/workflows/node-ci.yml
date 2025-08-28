@@ -35,8 +35,8 @@ jobs:
           path: oauth2
 
       - name: Copy artifacts to target repo static directory
-      - run: pwd
-      - run: |
+        run: |
+          pwd
           rm -rf oauth2/src/main/resources/static
           cp -r ${{ github.workspace }}/disk/* oauth2/src/main/resources/static
 
