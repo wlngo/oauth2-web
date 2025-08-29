@@ -36,6 +36,7 @@ import {
   SidebarNav,
   SidebarNavItem,
   SidebarMain,
+  SidebarToggle,
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 
@@ -215,6 +216,7 @@ export default function UserManagement() {
 
   return (
     <SidebarProvider>
+      <SidebarToggle />
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
@@ -264,18 +266,18 @@ export default function UserManagement() {
       <SidebarMain>
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" onClick={goBack}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
+              <Button variant="outline" size="sm" onClick={goBack} className="w-fit">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回仪表板
               </Button>
               <div>
-                <h1 className="text-3xl font-bold">用户管理</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">用户管理</h1>
                 <p className="text-muted-foreground">管理系统用户账户和权限</p>
               </div>
             </div>
-            <Button onClick={handleAddUser}>
+            <Button onClick={handleAddUser} className="w-fit">
               <Plus className="h-4 w-4 mr-2" />
               添加用户
             </Button>
@@ -287,7 +289,7 @@ export default function UserManagement() {
               <CardTitle>用户列表</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4 mb-6">
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
@@ -297,131 +299,224 @@ export default function UserManagement() {
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-fit">
                   <Filter className="h-4 w-4 mr-2" />
                   过滤
                 </Button>
               </div>
 
-              {/* Users Table */}
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>用户</TableHead>
-                      <TableHead>联系信息</TableHead>
-                      <TableHead>验证状态</TableHead>
-                      <TableHead>角色权限</TableHead>
-                      <TableHead>创建时间</TableHead>
-                      <TableHead className="text-right">操作</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.userId}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={user.avatarUrl} alt={user.nickName} />
-                              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                                {getInitials(user.nickName || user.realName || user.username)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium">{user.nickName || user.realName}</div>
-                              <div className="text-sm text-muted-foreground">@{user.username}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {getGenderText(user.gender)} · {user.birthdate ? formatDate(user.birthdate) : "未设置生日"}
+              {/* Users Table - Mobile Responsive */}
+              <div className="rounded-md border overflow-hidden">
+                {/* Desktop Table */}
+                <div className="hidden lg:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>用户</TableHead>
+                        <TableHead>联系信息</TableHead>
+                        <TableHead>验证状态</TableHead>
+                        <TableHead>角色权限</TableHead>
+                        <TableHead>创建时间</TableHead>
+                        <TableHead className="text-right">操作</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.userId}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={user.avatarUrl} alt={user.nickName} />
+                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                  {getInitials(user.nickName || user.realName || user.username)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">{user.nickName || user.realName}</div>
+                                <div className="text-sm text-muted-foreground">@{user.username}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {getGenderText(user.gender)} · {user.birthdate ? formatDate(user.birthdate) : "未设置生日"}
+                                </div>
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="h-3 w-3" />
+                                {user.email}
+                              </div>
+                              {user.phoneNumber && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="h-3 w-3" />
+                                  {user.phoneNumber}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                {user.emailVerified ? (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 text-red-600" />
+                                )}
+                                <span className="text-sm">
+                                  邮箱{user.emailVerified ? "已验证" : "未验证"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {user.phoneNumberVerified ? (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 text-red-600" />
+                                )}
+                                <span className="text-sm">
+                                  手机{user.phoneNumberVerified ? "已验证" : "未验证"}
+                                </span>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {getRoleDisplay(user.authorities)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(user.createdAt)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleViewUser(user.userId!)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleEditUser(user.userId!)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDeleteUser(user.userId!)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="lg:hidden space-y-4 p-4">
+                  {filteredUsers.map((user) => (
+                    <Card key={user.userId} className="p-4">
+                      <div className="space-y-4">
+                        {/* User Header */}
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={user.avatarUrl} alt={user.nickName} />
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                              {getInitials(user.nickName || user.realName || user.username)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="font-medium">{user.nickName || user.realName}</div>
+                            <div className="text-sm text-muted-foreground">@{user.username}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {getGenderText(user.gender)} · {user.birthdate ? formatDate(user.birthdate) : "未设置生日"}
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="h-3 w-3" />
-                              {user.email}
-                            </div>
-                            {user.phoneNumber && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <Phone className="h-3 w-3" />
-                                {user.phoneNumber}
-                              </div>
+                        </div>
+
+                        {/* Contact Info */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-3 w-3" />
+                            <span className="break-all">{user.email}</span>
+                            {user.emailVerified ? (
+                              <CheckCircle className="h-3 w-3 text-green-600 flex-shrink-0" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-red-600 flex-shrink-0" />
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              {user.emailVerified ? (
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <XCircle className="h-4 w-4 text-red-600" />
-                              )}
-                              <span className="text-sm">
-                                邮箱{user.emailVerified ? "已验证" : "未验证"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
+                          {user.phoneNumber && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="h-3 w-3" />
+                              <span>{user.phoneNumber}</span>
                               {user.phoneNumberVerified ? (
-                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <CheckCircle className="h-3 w-3 text-green-600 flex-shrink-0" />
                               ) : (
-                                <XCircle className="h-4 w-4 text-red-600" />
+                                <XCircle className="h-3 w-3 text-red-600 flex-shrink-0" />
                               )}
-                              <span className="text-sm">
-                                手机{user.phoneNumberVerified ? "已验证" : "未验证"}
-                              </span>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {getRoleDisplay(user.authorities)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(user.createdAt)}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleViewUser(user.userId!)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleEditUser(user.userId!)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleDeleteUser(user.userId!)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          )}
+                        </div>
+
+                        {/* Roles */}
+                        <div className="flex flex-wrap gap-1">
+                          {getRoleDisplay(user.authorities)}
+                        </div>
+
+                        {/* Creation Date */}
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(user.createdAt)}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pt-2 border-t">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => handleViewUser(user.userId!)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            查看
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => handleEditUser(user.userId!)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            编辑
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.userId!)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
 
               {/* Stats */}
-              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
                 <div>
                   显示 {filteredUsers.length} 个用户，共 {users.length} 个用户
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
                   <span>已验证邮箱: {users.filter(u => u.emailVerified).length}</span>
                   <span>已验证手机: {users.filter(u => u.phoneNumberVerified).length}</span>
                   <span>管理员: {users.filter(u => u.authorities?.includes("ADMIN")).length}</span>

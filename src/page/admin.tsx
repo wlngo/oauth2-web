@@ -24,6 +24,7 @@ import {
   SidebarNav,
   SidebarNavItem,
   SidebarMain,
+  SidebarToggle,
 } from "@/components/ui/sidebar"
 
 const adminNavItems = [
@@ -129,6 +130,7 @@ export default function AdminDashboard() {
 
   return (
     <SidebarProvider>
+      <SidebarToggle />
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
@@ -178,19 +180,19 @@ export default function AdminDashboard() {
       <SidebarMain>
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold">仪表板</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">仪表板</h1>
               <p className="text-muted-foreground">欢迎回到 OAuth2 管理后台</p>
             </div>
-            <Button onClick={goHome} variant="outline">
+            <Button onClick={goHome} variant="outline" className="w-fit">
               <Home className="h-4 w-4 mr-2" />
               返回首页
             </Button>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {dashboardStats.map((stat, index) => (
               <Card key={index}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -210,7 +212,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Recent Activity */}
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>最近活动</CardTitle>
@@ -218,7 +220,7 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-center justify-between">
+                    <div key={activity.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
                         <p className="text-sm font-medium">{activity.action}</p>
                         <p className="text-xs text-muted-foreground">
@@ -228,6 +230,7 @@ export default function AdminDashboard() {
                       <Badge 
                         variant={activity.status === "成功" ? "default" : 
                                 activity.status === "待审核" ? "secondary" : "outline"}
+                        className="w-fit"
                       >
                         {activity.status}
                       </Badge>
@@ -279,26 +282,26 @@ export default function AdminDashboard() {
               <CardTitle>快速操作</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-4">
                 <Button 
                   className="h-20 flex-col gap-2" 
                   variant="outline"
                   onClick={() => navigate({ to: "/admin/users" })}
                 >
                   <Users className="h-6 w-6" />
-                  <span className="text-sm">添加用户</span>
+                  <span className="text-sm text-center">添加用户</span>
                 </Button>
                 <Button className="h-20 flex-col gap-2" variant="outline">
                   <Key className="h-6 w-6" />
-                  <span className="text-sm">注册应用</span>
+                  <span className="text-sm text-center">注册应用</span>
                 </Button>
                 <Button className="h-20 flex-col gap-2" variant="outline">
                   <Shield className="h-6 w-6" />
-                  <span className="text-sm">权限配置</span>
+                  <span className="text-sm text-center">权限配置</span>
                 </Button>
                 <Button className="h-20 flex-col gap-2" variant="outline">
                   <BarChart3 className="h-6 w-6" />
-                  <span className="text-sm">查看报告</span>
+                  <span className="text-sm text-center">查看报告</span>
                 </Button>
               </div>
             </CardContent>
