@@ -13,7 +13,7 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  ArrowLeft
+  ArrowLeft, LayoutDashboard, Users, Key, BarChart3, Activity, Settings
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -110,13 +110,13 @@ const mockUsers: UserInfo[] = [
 ]
 
 const adminNavItems = [
-  { icon: Shield, label: "仪表板", id: "dashboard" },
-  { icon: Shield, label: "用户管理", id: "users", active: true },
-  { icon: Shield, label: "应用管理", id: "applications" },
+  { icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true },
+  { icon: Users, label: "用户管理", id: "users" },
+  { icon: Key, label: "应用管理", id: "applications" },
   { icon: Shield, label: "权限管理", id: "permissions" },
-  { icon: Shield, label: "数据统计", id: "analytics" },
-  { icon: Shield, label: "审计日志", id: "audit" },
-  { icon: Shield, label: "系统设置", id: "settings" },
+  { icon: BarChart3, label: "数据统计", id: "analytics" },
+  { icon: Activity, label: "审计日志", id: "audit" },
+  { icon: Settings, label: "系统设置", id: "settings" },
 ]
 
 export default function UserManagement() {
