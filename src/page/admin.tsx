@@ -112,7 +112,11 @@ export default function AdminDashboard() {
 
   const handleNavigation = (id: string) => {
     setActiveItem(id)
-    // 这里可以根据需要添加具体的导航逻辑
+    // 根据导航项ID进行路由跳转
+    if (id === "users") {
+      navigate({ to: "/admin/users" })
+    }
+    // 其他导航逻辑可以在这里添加
   }
 
   const goHome = () => {
@@ -276,7 +280,11 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-4">
-                <Button className="h-20 flex-col gap-2" variant="outline">
+                <Button 
+                  className="h-20 flex-col gap-2" 
+                  variant="outline"
+                  onClick={() => navigate({ to: "/admin/users" })}
+                >
                   <Users className="h-6 w-6" />
                   <span className="text-sm">添加用户</span>
                 </Button>

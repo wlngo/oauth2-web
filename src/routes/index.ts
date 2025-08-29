@@ -3,6 +3,7 @@ import {loginRoute} from './login'
 import {oauth2Consent} from './oauth2Consent'
 import {userProfileRoute} from './userProfile'
 import {adminRoute} from './admin'
+import {userManagementRoute} from './userManagement'
 import {rootRoute} from './router'
 import {createRouter, createHashHistory} from '@tanstack/react-router'
 
@@ -13,7 +14,8 @@ export const routeTree = rootRoute.addChildren([
     loginRoute,
     oauth2Consent,
     userProfileRoute,
-    adminRoute
+    adminRoute,
+    userManagementRoute
 ])
 
 export const router = createRouter({
