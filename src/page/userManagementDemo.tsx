@@ -305,11 +305,11 @@ export default function UserManagementDemo() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2 pt-2 border-t">
+                      <div className="flex items-center gap-2 pt-2 border-t bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 rounded-lg p-3 -mx-1">
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className="flex-1"
+                          className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-500 hover:border-blue-600 shadow-md hover:shadow-lg transition-all duration-200"
                           onClick={() => handleViewUser(user.userId!)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
@@ -318,7 +318,7 @@ export default function UserManagementDemo() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className="flex-1"
+                          className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-500 hover:border-green-600 shadow-md hover:shadow-lg transition-all duration-200"
                           onClick={() => handleEditUser(user.userId!)}
                         >
                           <Edit className="h-4 w-4 mr-2" />
@@ -327,6 +327,7 @@ export default function UserManagementDemo() {
                         <Button 
                           variant="outline" 
                           size="sm"
+                          className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-red-500 hover:border-red-600 shadow-md hover:shadow-lg transition-all duration-200"
                           onClick={() => handleDeleteUser(user.userId!)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -342,11 +343,6 @@ export default function UserManagementDemo() {
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground border-t pt-4">
               <div>
                 显示 {filteredUsers.length} 个用户，共 {users.length} 个用户
-              </div>
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
-                <span>已验证邮箱: {users.filter(u => u.emailVerified).length}</span>
-                <span>已验证手机: {users.filter(u => u.phoneNumberVerified).length}</span>
-                <span>管理员: {users.filter(u => u.authorities?.includes("ADMIN")).length}</span>
               </div>
             </div>
           </CardContent>
