@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import {
   Plus,
@@ -13,7 +13,9 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  ArrowLeft, LayoutDashboard, Users, Key, BarChart3, Activity, Settings
+  ArrowLeft, LayoutDashboard, Users, Key, BarChart3, Activity, Settings,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -39,76 +41,19 @@ import {
   SidebarToggle,
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
-
-// 复用现有的 UserInfo 接口
-interface UserInfo {
-  userId?: string
-  username?: string
-  nickName?: string
-  realName?: string
-  email?: string
-  emailVerified?: boolean
-  phoneNumber?: string
-  phoneNumberVerified?: boolean
-  gender?: number
-  birthdate?: string
-  avatarUrl?: string
-  createdAt?: string
-  updatedAt?: string
-  authorities?: string[]
-}
-
-// 模拟用户数据 - 实际项目中会从API获取
-const mockUsers: UserInfo[] = [
-  {
-    userId: "1",
-    username: "zhangsan",
-    nickName: "张三",
-    realName: "张三",
-    email: "zhangsan@example.com",
-    emailVerified: true,
-    phoneNumber: "13800138001",
-    phoneNumberVerified: true,
-    gender: 1,
-    birthdate: "1990-01-01",
-    avatarUrl: "",
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-15T00:00:00.000Z",
-    authorities: ["USER", "ADMIN"]
-  },
-  {
-    userId: "2",
-    username: "lisi",
-    nickName: "李四",
-    realName: "李四",
-    email: "lisi@example.com",
-    emailVerified: false,
-    phoneNumber: "13800138002",
-    phoneNumberVerified: true,
-    gender: 2,
-    birthdate: "1992-05-15",
-    avatarUrl: "",
-    createdAt: "2024-01-02T00:00:00.000Z",
-    updatedAt: "2024-01-16T00:00:00.000Z",
-    authorities: ["USER"]
-  },
-  {
-    userId: "3",
-    username: "wangwu",
-    nickName: "王五",
-    realName: "王五",
-    email: "wangwu@example.com",
-    emailVerified: true,
-    phoneNumber: "13800138003",
-    phoneNumberVerified: false,
-    gender: 1,
-    birthdate: "1988-12-20",
-    avatarUrl: "",
-    createdAt: "2024-01-03T00:00:00.000Z",
-    updatedAt: "2024-01-17T00:00:00.000Z",
-    authorities: ["USER", "MODERATOR"]
-  }
-]
+import { UserForm } from "@/components/UserForm"
+import { UserDetailModal } from "@/components/UserDetailModal"
+import { 
+  getAllUsers, 
+  createUser, 
+  updateUser, 
+  deleteUser
+} from "@/services/userService"
+import type {
+  UserInfo,
+  CreateUserRequest,
+  UpdateUserRequest
+} from "@/services/userService"
 
 const adminNavItems = [
   { icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true },
@@ -122,9 +67,46 @@ const adminNavItems = [
 
 export default function UserManagement() {
   const navigate = useNavigate()
-  const [users] = useState<UserInfo[]>(mockUsers)
   const [searchTerm, setSearchTerm] = useState("")
+  const [users, setUsers] = useState<UserInfo[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [activeItem, setActiveItem] = useState("users")
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize] = useState(10)
+  const [totalUsers, setTotalUsers] = useState(0)
+  
+  // Modal states
+  const [showUserForm, setShowUserForm] = useState(false)
+  const [showUserDetail, setShowUserDetail] = useState(false)
+  const [editingUser, setEditingUser] = useState<UserInfo | null>(null)
+  const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null)
+  const [formLoading, setFormLoading] = useState(false)
+
+  // Load users on component mount and when page changes
+  useEffect(() => {
+    loadUsers()
+  }, [currentPage, pageSize])
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await getAllUsers(currentPage, pageSize)
+      setUsers(data.list)
+      setTotalUsers(data.total)
+    } catch (err) {
+      console.error('Failed to load users:', err)
+      setError(err instanceof Error ? err.message : '加载用户列表失败')
+      // Fallback to empty list if API fails
+      setUsers([])
+      setTotalUsers(0)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleNavigation = (id: string) => {
     setActiveItem(id)
@@ -195,23 +177,79 @@ export default function UserManagement() {
   )
 
   const handleAddUser = () => {
-    // TODO: 实现添加用户功能
-    console.log("添加用户")
+    setEditingUser(null)
+    setShowUserForm(true)
   }
 
   const handleEditUser = (userId: string) => {
-    // TODO: 实现编辑用户功能
-    console.log("编辑用户:", userId)
+    const user = users.find(u => u.userId === userId)
+    if (user) {
+      setEditingUser(user)
+      setShowUserForm(true)
+    }
   }
 
-  const handleDeleteUser = (userId: string) => {
-    // TODO: 实现删除用户功能
-    console.log("删除用户:", userId)
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('确定要删除此用户吗？此操作不可逆。')) {
+      return
+    }
+
+    try {
+      await deleteUser(userId)
+      await loadUsers() // Reload the user list
+      // Optionally show success message
+    } catch (err) {
+      console.error('Failed to delete user:', err)
+      alert(err instanceof Error ? err.message : '删除用户失败')
+    }
   }
 
   const handleViewUser = (userId: string) => {
-    // TODO: 实现查看用户详情功能
-    console.log("查看用户:", userId)
+    const user = users.find(u => u.userId === userId)
+    if (user) {
+      setSelectedUser(user)
+      setShowUserDetail(true)
+    }
+  }
+
+  const handleFormSubmit = async (userData: CreateUserRequest | UpdateUserRequest) => {
+    try {
+      setFormLoading(true)
+      
+      if (editingUser) {
+        // Update existing user
+        await updateUser(userData as UpdateUserRequest)
+      } else {
+        // Create new user
+        await createUser(userData as CreateUserRequest)
+      }
+      
+      setShowUserForm(false)
+      setEditingUser(null)
+      await loadUsers() // Reload the user list
+      // Optionally show success message
+    } catch (err) {
+      console.error('Failed to save user:', err)
+      alert(err instanceof Error ? err.message : '保存用户失败')
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
+  const handleFormCancel = () => {
+    setShowUserForm(false)
+    setEditingUser(null)
+  }
+
+  const handleDetailClose = () => {
+    setShowUserDetail(false)
+    setSelectedUser(null)
+  }
+
+  const handleDetailEdit = (userId: string) => {
+    setShowUserDetail(false)
+    setSelectedUser(null)
+    handleEditUser(userId)
   }
 
   return (
@@ -305,8 +343,45 @@ export default function UserManagement() {
                 </Button>
               </div>
 
+              {/* Loading State */}
+              {loading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">加载用户列表中...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {error && !loading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <Button onClick={loadUsers} variant="outline">
+                      重新加载
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!loading && !error && users.length === 0 && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">暂无用户</p>
+                    <Button onClick={handleAddUser}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      添加第一个用户
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Users Table - Mobile Responsive */}
-              <div className="rounded-md border overflow-hidden">
+              {!loading && !error && users.length > 0 && (
+                <div className="rounded-md border overflow-hidden">
                 {/* Desktop Table */}
                 <div className="hidden lg:block">
                   <Table>
@@ -510,11 +585,41 @@ export default function UserManagement() {
                   ))}
                 </div>
               </div>
+              )}
+
+              {/* Pagination */}
+              {!loading && totalUsers > pageSize && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    第 {currentPage + 1} 页，共 {Math.ceil(totalUsers / pageSize)} 页
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                      disabled={currentPage === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      上一页
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => prev + 1)}
+                      disabled={(currentPage + 1) * pageSize >= totalUsers}
+                    >
+                      下一页
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Stats */}
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
                 <div>
-                  显示 {filteredUsers.length} 个用户，共 {users.length} 个用户
+                  显示 {filteredUsers.length} 个用户，共 {totalUsers} 个用户
                 </div>
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
                   <span>已验证邮箱: {users.filter(u => u.emailVerified).length}</span>
@@ -526,6 +631,24 @@ export default function UserManagement() {
           </Card>
         </div>
       </SidebarMain>
+
+      {/* Modals */}
+      {showUserForm && (
+        <UserForm
+          user={editingUser || undefined}
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+          isLoading={formLoading}
+        />
+      )}
+
+      {showUserDetail && selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          onClose={handleDetailClose}
+          onEdit={handleDetailEdit}
+        />
+      )}
     </SidebarProvider>
   )
 }
