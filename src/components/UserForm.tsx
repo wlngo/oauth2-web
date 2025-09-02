@@ -89,9 +89,9 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-semibold"> border border-gray-200
             {isEditMode ? "编辑用户" : "新增用户"}
           </h2>
           <Button variant="ghost" size="sm" onClick={onCancel}>
@@ -217,9 +217,6 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={isLoading} className="flex-1">
               {isLoading ? "提交中..." : (isEditMode ? "更新" : "创建")}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-              取消
             </Button>
           </div>
         </form>

@@ -55,7 +55,7 @@ export function UserDetailModal({ user, onClose, onEdit }: UserDetailModalProps)
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">用户详情</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -225,9 +225,6 @@ export function UserDetailModal({ user, onClose, onEdit }: UserDetailModalProps)
         <div className="flex gap-2 pt-6 border-t">
           <Button onClick={() => onEdit(user.userId!)} className="flex-1">
             编辑用户
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            关闭
           </Button>
         </div>
       </div>
