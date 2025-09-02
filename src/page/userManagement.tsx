@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import {
   Plus,
@@ -88,17 +88,16 @@ export default function UserManagement() {
   const [deletingUser, setDeletingUser] = useState<UserInfo | null>(null)
   const [formLoading, setFormLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  
+  // Page jump functionality
+  const [jumpToPage, setJumpToPage] = useState("")
 
-  // Load users on component mount and when page changes
-  useEffect(() => {
-    loadUsers()
-  }, [currentPage, pageSize])
-
-  const loadUsers = async () => {
+  // Load users function with keyword support
+  const loadUsers = useCallback(async (keyword?: string) => {
     try {
       setLoading(true)
       setError(null)
-      const data = await getAllUsers(currentPage, pageSize)
+      const data = await getAllUsers(currentPage, pageSize, keyword)
       setUsers(data.list)
       setTotalUsers(data.total)
     } catch (err) {
@@ -110,7 +109,23 @@ export default function UserManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentPage, pageSize])
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadUsers(searchTerm || undefined)
+    }, 300) // 300ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, loadUsers])
+
+  // Load users on component mount and when page changes (not for search - that's handled by debounced effect)
+  useEffect(() => {
+    if (!searchTerm) { // Only load when not searching, search is handled by debounced effect
+      loadUsers()
+    }
+  }, [currentPage, pageSize, loadUsers]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNavigation = (id: string) => {
     setActiveItem(id)
@@ -173,12 +188,8 @@ export default function UserManagement() {
     ))
   }
 
-  const filteredUsers = users.filter(user => 
-    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.nickName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.realName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Users are now filtered by API, no need for client-side filtering
+  const displayedUsers = users
 
   const handleAddUser = () => {
     setEditingUser(null)
@@ -207,7 +218,7 @@ export default function UserManagement() {
     try {
       setDeleteLoading(true)
       await deleteUser(deletingUser.userId!)
-      await loadUsers() // Reload the user list
+      await loadUsers(searchTerm || undefined) // Reload the user list
       setShowDeleteConfirmation(false)
       setDeletingUser(null)
       // Optionally show success message
@@ -246,7 +257,7 @@ export default function UserManagement() {
       
       setShowUserForm(false)
       setEditingUser(null)
-      await loadUsers() // Reload the user list
+      await loadUsers(searchTerm || undefined) // Reload the user list
       // Optionally show success message
     } catch (err) {
       console.error('Failed to save user:', err)
@@ -270,6 +281,21 @@ export default function UserManagement() {
     setShowUserDetail(false)
     setSelectedUser(null)
     handleEditUser(userId)
+  }
+
+  const handleJumpToPage = () => {
+    const pageNum = parseInt(jumpToPage)
+    const totalPages = Math.ceil(totalUsers / pageSize)
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum)
+      setJumpToPage("")
+    }
+  }
+
+  const handleJumpInputKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleJumpToPage()
+    }
   }
 
   return (
@@ -378,7 +404,7 @@ export default function UserManagement() {
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
                     <p className="text-red-600 mb-4">{error}</p>
-                    <Button onClick={loadUsers} variant="outline">
+                    <Button onClick={() => loadUsers(searchTerm || undefined)} variant="outline">
                       重新加载
                     </Button>
                   </div>
@@ -416,7 +442,7 @@ export default function UserManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.map((user) => (
+                      {displayedUsers.map((user) => (
                         <TableRow key={user.userId}>
                           <TableCell>
                             <div className="flex items-center gap-3">
@@ -520,7 +546,7 @@ export default function UserManagement() {
 
                 {/* Mobile Cards */}
                 <div className="lg:hidden space-y-4 p-4">
-                  {filteredUsers.map((user) => (
+                  {displayedUsers.map((user) => (
                     <Card key={user.userId} className="p-4">
                       <div className="space-y-4">
                         {/* User Header */}
@@ -614,28 +640,55 @@ export default function UserManagement() {
 
               {/* Pagination */}
               {!loading && totalUsers > pageSize && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="text-sm text-muted-foreground">
-                    第 {currentPage} 页，共 {Math.ceil(totalUsers / pageSize)} 页
+                <div className="flex flex-col gap-4 mt-4 pt-4 border-t">
+                  {/* Pagination info and controls */}
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      第 {currentPage} 页，共 {Math.ceil(totalUsers / pageSize)} 页
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        上一页
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        disabled={currentPage >= Math.ceil(totalUsers / pageSize)}
+                      >
+                        下一页
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  {/* Page jumping */}
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm text-muted-foreground">跳转到</span>
+                    <Input
+                      type="number"
+                      min="1"
+                      max={Math.ceil(totalUsers / pageSize)}
+                      value={jumpToPage}
+                      onChange={(e) => setJumpToPage(e.target.value)}
+                      onKeyDown={handleJumpInputKeyPress}
+                      className="w-20 text-center"
+                      placeholder="页码"
+                    />
+                    <span className="text-sm text-muted-foreground">页</span>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
+                      onClick={handleJumpToPage}
+                      disabled={!jumpToPage || parseInt(jumpToPage) < 1 || parseInt(jumpToPage) > Math.ceil(totalUsers / pageSize)}
                     >
-                      <ChevronLeft className="h-4 w-4" />
-                      上一页
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => prev + 1)}
-                      disabled={(currentPage + 1) * pageSize >= totalUsers}
-                    >
-                      下一页
-                      <ChevronRight className="h-4 w-4" />
+                      跳转
                     </Button>
                   </div>
                 </div>
@@ -644,7 +697,7 @@ export default function UserManagement() {
               {/* Stats */}
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
                 <div>
-                  显示 {filteredUsers.length} 个用户，共 {totalUsers} 个用户
+                  显示 {displayedUsers.length} 个用户，共 {totalUsers} 个用户
                 </div>
               </div>
             </CardContent>
