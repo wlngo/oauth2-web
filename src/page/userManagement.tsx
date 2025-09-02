@@ -43,6 +43,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { UserForm } from "@/components/UserForm"
 import { UserDetailModal } from "@/components/UserDetailModal"
+import { DeleteConfirmationModal } from "@/components/DeleteConfirmationModal"
 import { 
   getAllUsers, 
   createUser, 
@@ -81,9 +82,12 @@ export default function UserManagement() {
   // Modal states
   const [showUserForm, setShowUserForm] = useState(false)
   const [showUserDetail, setShowUserDetail] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [editingUser, setEditingUser] = useState<UserInfo | null>(null)
   const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null)
+  const [deletingUser, setDeletingUser] = useState<UserInfo | null>(null)
   const [formLoading, setFormLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Load users on component mount and when page changes
   useEffect(() => {
@@ -190,18 +194,34 @@ export default function UserManagement() {
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('确定要删除此用户吗？此操作不可逆。')) {
-      return
+    const user = users.find(u => u.userId === userId)
+    if (user) {
+      setDeletingUser(user)
+      setShowDeleteConfirmation(true)
     }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return
 
     try {
-      await deleteUser(userId)
+      setDeleteLoading(true)
+      await deleteUser(deletingUser.userId!)
       await loadUsers() // Reload the user list
+      setShowDeleteConfirmation(false)
+      setDeletingUser(null)
       // Optionally show success message
     } catch (err) {
       console.error('Failed to delete user:', err)
       alert(err instanceof Error ? err.message : '删除用户失败')
+    } finally {
+      setDeleteLoading(false)
     }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false)
+    setDeletingUser(null)
   }
 
   const handleViewUser = (userId: string) => {
@@ -469,6 +489,7 @@ export default function UserManagement() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
+                                className="hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950 dark:hover:text-blue-400"
                                 onClick={() => handleViewUser(user.userId!)}
                               >
                                 <Eye className="h-4 w-4" />
@@ -476,6 +497,7 @@ export default function UserManagement() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
+                                className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950 dark:hover:text-green-400"
                                 onClick={() => handleEditUser(user.userId!)}
                               >
                                 <Edit className="h-4 w-4" />
@@ -483,6 +505,7 @@ export default function UserManagement() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
+                                className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
                                 onClick={() => handleDeleteUser(user.userId!)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -553,11 +576,11 @@ export default function UserManagement() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-2 pt-2 border-t">
+                        <div className="space-y-2 pt-2 border-t bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 rounded-lg p-3 -mx-1">
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="flex-1"
+                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-500 hover:border-blue-600 shadow-md hover:shadow-lg transition-all duration-200"
                             onClick={() => handleViewUser(user.userId!)}
                           >
                             <Eye className="h-4 w-4 mr-2" />
@@ -566,7 +589,7 @@ export default function UserManagement() {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="flex-1"
+                            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-500 hover:border-green-600 shadow-md hover:shadow-lg transition-all duration-200"
                             onClick={() => handleEditUser(user.userId!)}
                           >
                             <Edit className="h-4 w-4 mr-2" />
@@ -575,9 +598,11 @@ export default function UserManagement() {
                           <Button 
                             variant="outline" 
                             size="sm"
+                            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-red-500 hover:border-red-600 shadow-md hover:shadow-lg transition-all duration-200"
                             onClick={() => handleDeleteUser(user.userId!)}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            删除
                           </Button>
                         </div>
                       </div>
@@ -621,11 +646,6 @@ export default function UserManagement() {
                 <div>
                   显示 {filteredUsers.length} 个用户，共 {totalUsers} 个用户
                 </div>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
-                  <span>已验证邮箱: {users.filter(u => u.emailVerified).length}</span>
-                  <span>已验证手机: {users.filter(u => u.phoneNumberVerified).length}</span>
-                  <span>管理员: {users.filter(u => u.authorities?.includes("ADMIN")).length}</span>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -647,6 +667,15 @@ export default function UserManagement() {
           user={selectedUser}
           onClose={handleDetailClose}
           onEdit={handleDetailEdit}
+        />
+      )}
+
+      {showDeleteConfirmation && deletingUser && (
+        <DeleteConfirmationModal
+          user={deletingUser}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          isLoading={deleteLoading}
         />
       )}
     </SidebarProvider>

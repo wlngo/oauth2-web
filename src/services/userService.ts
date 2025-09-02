@@ -67,10 +67,12 @@ export interface UpdateUserRequest {
 }
 
 // Get all users with pagination
-export async function getAllUsers(page: number = 0, size: number = 10): Promise<PaginatedResponse<UserInfo>> {
+export async function getAllUsers(page: number = 0, size: number = 10, keyword?: string): Promise<PaginatedResponse<UserInfo>> {
+  const requestBody = { page, size, ...(keyword && { keyword }) }
+  
   const response = await request<ApiResponse<PaginatedResponse<UserInfo>>>('/api/users/getAllUsers', {
     method: 'POST',
-    body: { page, size } as any,
+    body: requestBody as any,
     csrf: true
   })
   
