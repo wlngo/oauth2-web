@@ -58,7 +58,7 @@ export async function request<T>(
         ...options,
         headers,
         credentials: 'include',
-        body: options.body ? JSON.stringify(options.body) : undefined,
+        body: options.body ? options.body : undefined,
     })
 
     if (!response.ok) {
