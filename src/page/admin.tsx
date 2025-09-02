@@ -10,7 +10,8 @@ import {
   Activity,
   LogOut,
   Home,
-  User
+  User,
+  Menu
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -30,8 +31,9 @@ import {
 const adminNavItems = [
   { icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true },
   { icon: Users, label: "用户管理", id: "users" },
-  { icon: Key, label: "应用管理", id: "applications" },
-  { icon: Shield, label: "权限管理", id: "permissions" },
+  { icon: Shield, label: "角色管理", id: "roles" },
+  { icon: Key, label: "权限管理", id: "permissions" },
+  { icon: Menu, label: "菜单管理", id: "menus" },
   { icon: BarChart3, label: "数据统计", id: "analytics" },
   { icon: Activity, label: "审计日志", id: "audit" },
   { icon: Settings, label: "系统设置", id: "settings" },
@@ -116,6 +118,12 @@ export default function AdminDashboard() {
     // 根据导航项ID进行路由跳转
     if (id === "users") {
       navigate({ to: "/admin/users" })
+    } else if (id === "roles") {
+      navigate({ to: "/admin/roles" })
+    } else if (id === "permissions") {
+      navigate({ to: "/admin/permissions" })
+    } else if (id === "menus") {
+      navigate({ to: "/admin/menus" })
     }
     // 其他导航逻辑可以在这里添加
   }
@@ -291,12 +299,20 @@ export default function AdminDashboard() {
                   <Users className="h-6 w-6" />
                   <span className="text-sm text-center">添加用户</span>
                 </Button>
-                <Button className="h-20 flex-col gap-2" variant="outline">
-                  <Key className="h-6 w-6" />
-                  <span className="text-sm text-center">注册应用</span>
-                </Button>
-                <Button className="h-20 flex-col gap-2" variant="outline">
+                <Button 
+                  className="h-20 flex-col gap-2" 
+                  variant="outline"
+                  onClick={() => navigate({ to: "/admin/roles" })}
+                >
                   <Shield className="h-6 w-6" />
+                  <span className="text-sm text-center">管理角色</span>
+                </Button>
+                <Button 
+                  className="h-20 flex-col gap-2" 
+                  variant="outline"
+                  onClick={() => navigate({ to: "/admin/permissions" })}
+                >
+                  <Key className="h-6 w-6" />
                   <span className="text-sm text-center">权限配置</span>
                 </Button>
                 <Button className="h-20 flex-col gap-2" variant="outline">
