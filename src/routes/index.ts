@@ -8,6 +8,7 @@ import {userManagementDemoRoute} from './userManagementDemo'
 import {roleManagementRoute} from './roleManagement'
 import {permissionManagementRoute} from './permissionManagement'
 import {menuManagementRoute} from './menuManagement'
+import {rolePermissionRelationManagementRoute} from './rolePermissionRelationManagement'
 import {rootRoute} from './router'
 import {createRouter, createHashHistory} from '@tanstack/react-router'
 
@@ -23,7 +24,8 @@ export const routeTree = rootRoute.addChildren([
     userManagementDemoRoute,
     roleManagementRoute,
     permissionManagementRoute,
-    menuManagementRoute
+    menuManagementRoute,
+    rolePermissionRelationManagementRoute
 ])
 
 export const router = createRouter({
