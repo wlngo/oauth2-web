@@ -91,7 +91,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold"> border border-gray-200
+          <h2 className="text-lg font-semibold">
             {isEditMode ? "编辑用户" : "新增用户"}
           </h2>
           <Button variant="ghost" size="sm" onClick={onCancel}>
