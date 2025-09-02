@@ -75,7 +75,7 @@ export default function UserManagement() {
   const [activeItem, setActiveItem] = useState("users")
   
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
   const [totalUsers, setTotalUsers] = useState(0)
   
@@ -616,14 +616,14 @@ export default function UserManagement() {
               {!loading && totalUsers > pageSize && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    第 {currentPage + 1} 页，共 {Math.ceil(totalUsers / pageSize)} 页
+                    第 {currentPage} 页，共 {Math.ceil(totalUsers / pageSize)} 页
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                      disabled={currentPage === 0}
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
                       上一页
