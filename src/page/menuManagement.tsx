@@ -7,17 +7,10 @@ import {
     Edit,
     Trash2,
     Eye,
-    Shield,
+    Menu,
     ArrowLeft,
-    LayoutDashboard,
-    Users,
-    Key,
-    BarChart3,
-    Activity,
-    Settings,
     ChevronLeft,
     ChevronRight,
-    Menu,
     Folder,
     FileText,
     MousePointer
@@ -45,6 +38,7 @@ import {
     SidebarToggle,
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+import { useAdminNavigation } from "@/hooks/useAdminNavigation"
 
 import {
     getAllMenus,
@@ -52,20 +46,10 @@ import {
     type MenuInfo
 } from "@/services/menuService"
 
-const adminNavItems = [
-    { icon: LayoutDashboard, label: "仪表板", id: "dashboard" },
-    { icon: Users, label: "用户管理", id: "users" },
-    { icon: Shield, label: "角色管理", id: "roles" },
-    { icon: Key, label: "权限管理", id: "permissions" },
-    { icon: Menu, label: "菜单管理", id: "menus", active: true },
-    { icon: BarChart3, label: "数据统计", id: "analytics" },
-    { icon: Activity, label: "审计日志", id: "audit" },
-    { icon: Settings, label: "系统设置", id: "settings" },
-]
-
 export default function MenuManagement() {
     const navigate = useNavigate()
     const [activeItem, setActiveItem] = useState("menus")
+    const { menuItems, loading: menuLoading, error: menuError } = useAdminNavigation()
     
     // State management
     const [menus, setMenus] = useState<MenuInfo[]>([])
@@ -209,7 +193,17 @@ export default function MenuManagement() {
 
                 <SidebarContent>
                     <SidebarNav>
-                        {adminNavItems.map((item) => (
+                        {menuLoading && (
+                            <div className="flex items-center justify-center py-4">
+                                <div className="text-sm text-muted-foreground">加载菜单中...</div>
+                            </div>
+                        )}
+                        {menuError && (
+                            <div className="flex items-center justify-center py-4">
+                                <div className="text-sm text-red-500">菜单加载失败</div>
+                            </div>
+                        )}
+                        {!menuLoading && !menuError && menuItems.map((item) => (
                             <SidebarNavItem
                                 key={item.id}
                                 active={activeItem === item.id}

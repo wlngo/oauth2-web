@@ -1,17 +1,14 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
   Shield, 
-  Key, 
-  BarChart3, 
-  Activity,
   LogOut,
   Home,
   User,
-  Menu
+  Users,
+  Key,
+  BarChart3,
+  Activity
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -27,17 +24,7 @@ import {
   SidebarMain,
   SidebarToggle,
 } from "@/components/ui/sidebar"
-
-const adminNavItems = [
-  { icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true },
-  { icon: Users, label: "用户管理", id: "users" },
-  { icon: Shield, label: "角色管理", id: "roles" },
-  { icon: Key, label: "权限管理", id: "permissions" },
-  { icon: Menu, label: "菜单管理", id: "menus" },
-  { icon: BarChart3, label: "数据统计", id: "analytics" },
-  { icon: Activity, label: "审计日志", id: "audit" },
-  { icon: Settings, label: "系统设置", id: "settings" },
-]
+import { useAdminNavigation } from "@/hooks/useAdminNavigation"
 
 const dashboardStats = [
   {
@@ -112,6 +99,7 @@ const recentActivities = [
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [activeItem, setActiveItem] = useState("dashboard")
+  const { menuItems, loading, error } = useAdminNavigation()
 
   const handleNavigation = (id: string) => {
     setActiveItem(id)
@@ -154,7 +142,17 @@ export default function AdminDashboard() {
         
         <SidebarContent>
           <SidebarNav>
-            {adminNavItems.map((item) => (
+            {loading && (
+              <div className="flex items-center justify-center py-4">
+                <div className="text-sm text-muted-foreground">加载菜单中...</div>
+              </div>
+            )}
+            {error && (
+              <div className="flex items-center justify-center py-4">
+                <div className="text-sm text-red-500">菜单加载失败</div>
+              </div>
+            )}
+            {!loading && !error && menuItems.map((item) => (
               <SidebarNavItem
                 key={item.id}
                 active={activeItem === item.id}

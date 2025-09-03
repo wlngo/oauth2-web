@@ -13,9 +13,10 @@ import {
     Calendar,
     CheckCircle,
     XCircle,
-    ArrowLeft, LayoutDashboard, Users, Key, BarChart3, Activity, Settings,
+    ArrowLeft,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Users
 } from "lucide-react"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
@@ -55,19 +56,11 @@ import type {
     CreateUserRequest,
     UpdateUserRequest
 } from "@/services/userService"
-
-const adminNavItems = [
-    {icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true},
-    {icon: Users, label: "用户管理", id: "users"},
-    {icon: Key, label: "应用管理", id: "applications"},
-    {icon: Shield, label: "权限管理", id: "permissions"},
-    {icon: BarChart3, label: "数据统计", id: "analytics"},
-    {icon: Activity, label: "审计日志", id: "audit"},
-    {icon: Settings, label: "系统设置", id: "settings"},
-]
+import { useAdminNavigation } from "@/hooks/useAdminNavigation"
 
 export default function UserManagement() {
     const navigate = useNavigate()
+    const { menuItems, loading: menuLoading, error: menuError } = useAdminNavigation()
     const [searchTerm, setSearchTerm] = useState("")
     const [users, setUsers] = useState<UserInfo[]>([])
     const [loading, setLoading] = useState(false)
@@ -326,7 +319,17 @@ export default function UserManagement() {
 
                 <SidebarContent>
                     <SidebarNav>
-                        {adminNavItems.map((item) => (
+                        {menuLoading && (
+                            <div className="flex items-center justify-center py-4">
+                                <div className="text-sm text-muted-foreground">加载菜单中...</div>
+                            </div>
+                        )}
+                        {menuError && (
+                            <div className="flex items-center justify-center py-4">
+                                <div className="text-sm text-red-500">菜单加载失败</div>
+                            </div>
+                        )}
+                        {!menuLoading && !menuError && menuItems.map((item) => (
                             <SidebarNavItem
                                 key={item.id}
                                 active={activeItem === item.id}
