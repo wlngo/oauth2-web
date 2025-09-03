@@ -1,43 +1,17 @@
-import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  Shield, 
-  Key, 
-  BarChart3, 
-  Activity,
-  LogOut,
   Home,
-  User,
-  Menu
+  Users, 
+  Key, 
+  Shield, 
+  Activity,
+  BarChart3
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarNav,
-  SidebarNavItem,
-  SidebarMain,
-  SidebarToggle,
-} from "@/components/ui/sidebar"
-
-const adminNavItems = [
-  { icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true },
-  { icon: Users, label: "用户管理", id: "users" },
-  { icon: Shield, label: "角色管理", id: "roles" },
-  { icon: Key, label: "权限管理", id: "permissions" },
-  { icon: Menu, label: "菜单管理", id: "menus" },
-  { icon: BarChart3, label: "数据统计", id: "analytics" },
-  { icon: Activity, label: "审计日志", id: "audit" },
-  { icon: Settings, label: "系统设置", id: "settings" },
-]
+import DynamicSidebar from "@/components/DynamicSidebar"
 
 const dashboardStats = [
   {
@@ -111,93 +85,29 @@ const recentActivities = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const [activeItem, setActiveItem] = useState("dashboard")
-
-  const handleNavigation = (id: string) => {
-    setActiveItem(id)
-    // 根据导航项ID进行路由跳转
-    if (id === "users") {
-      navigate({ to: "/admin/users" })
-    } else if (id === "roles") {
-      navigate({ to: "/admin/roles" })
-    } else if (id === "permissions") {
-      navigate({ to: "/admin/permissions" })
-    } else if (id === "menus") {
-      navigate({ to: "/admin/menus" })
-    }
-    // 其他导航逻辑可以在这里添加
-  }
 
   const goHome = () => {
     navigate({ to: "/" })
   }
 
-  const goToProfile = () => {
-    navigate({ to: "/profile" })
-  }
-
   return (
-    <SidebarProvider>
-      <SidebarToggle />
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md">
-              <Shield className="size-4" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">OAuth2 管理后台</h2>
-              <p className="text-xs text-sidebar-foreground/60">系统管理</p>
-            </div>
+    <DynamicSidebar 
+      headerTitle="OAuth2 管理后台"
+      headerSubtitle="系统管理"
+      currentPage="/admin"
+    >
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">仪表板</h1>
+            <p className="text-muted-foreground">欢迎回到 OAuth2 管理后台</p>
           </div>
-        </SidebarHeader>
-        
-        <SidebarContent>
-          <SidebarNav>
-            {adminNavItems.map((item) => (
-              <SidebarNavItem
-                key={item.id}
-                active={activeItem === item.id}
-                onClick={() => handleNavigation(item.id)}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </SidebarNavItem>
-            ))}
-          </SidebarNav>
-          
-          <Separator className="my-4" />
-          
-          <SidebarNav>
-            <SidebarNavItem onClick={goHome}>
-              <Home className="h-4 w-4" />
-              返回首页
-            </SidebarNavItem>
-            <SidebarNavItem onClick={goToProfile}>
-              <User className="h-4 w-4" />
-              个人资料
-            </SidebarNavItem>
-            <SidebarNavItem>
-              <LogOut className="h-4 w-4" />
-              退出登录
-            </SidebarNavItem>
-          </SidebarNav>
-        </SidebarContent>
-      </Sidebar>
-
-      <SidebarMain>
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">仪表板</h1>
-              <p className="text-muted-foreground">欢迎回到 OAuth2 管理后台</p>
-            </div>
-            <Button onClick={goHome} variant="outline" className="w-fit">
-              <Home className="h-4 w-4 mr-2" />
-              返回首页
-            </Button>
-          </div>
+          <Button onClick={goHome} variant="outline" className="w-fit">
+            <Home className="h-4 w-4 mr-2" />
+            返回首页
+          </Button>
+        </div>
 
           {/* Stats Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -323,7 +233,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
-      </SidebarMain>
-    </SidebarProvider>
+    </DynamicSidebar>
   )
 }

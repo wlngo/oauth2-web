@@ -1,6 +1,6 @@
 import DynamicSidebar from "@/components/DynamicSidebar"
 
-export default function UserManagement() {
+export default function UserManagementTest() {
     return (
         <DynamicSidebar 
             headerTitle="OAuth2 管理后台"
@@ -8,8 +8,7 @@ export default function UserManagement() {
             currentPage="/admin/users"
         >
             <div className="space-y-6">
-                <h1 className="text-2xl font-bold">用户管理</h1>
-                <p>用户管理页面正在开发中...</p>
+                <h1>Test</h1>
             </div>
         </DynamicSidebar>
     )

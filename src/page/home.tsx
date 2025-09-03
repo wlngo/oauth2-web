@@ -4,6 +4,7 @@ import {useState} from "react"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {User, LogOut, House, Shield} from "lucide-react"
+import UserMenuCards from "@/components/UserMenuCards"
 
 interface LogoutResponse {
     code: number
@@ -87,6 +88,16 @@ export default function Home() {
                                     查看个人资料
                                 </Button>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* User Menu Cards - Dynamic based on user permissions */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>我的应用</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <UserMenuCards />
                         </CardContent>
                     </Card>
 
