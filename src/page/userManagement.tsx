@@ -1,5 +1,6 @@
 import {useState, useEffect, useCallback} from "react"
 import {useNavigate} from "@tanstack/react-router"
+import {request} from "@/lib/http"
 import {
     Plus,
     Search,
@@ -16,7 +17,9 @@ import {
     ArrowLeft,
     ChevronLeft,
     ChevronRight,
-    Users
+    Users,
+    LogOut,
+    User
 } from "lucide-react"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
@@ -58,7 +61,10 @@ import type {
 } from "@/services/userService"
 import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
 
-
+interface LogoutResponse {
+    code: number
+    msg?: string
+}
 
 export default function UserManagement() {
     const navigate = useNavigate()
@@ -66,6 +72,7 @@ export default function UserManagement() {
     const [users, setUsers] = useState<UserInfo[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [logoutError, setLogoutError] = useState("")
     const [activeItem, setActiveItem] = useState("users")
 
     // Pagination state
@@ -131,11 +138,31 @@ export default function UserManagement() {
     }
 
     const goToProfile = () => {
-        navigate({to: "/profile"})
+        navigate({to: "/admin/profile"})
     }
 
     const goBack = () => {
         navigate({to: "/admin"})
+    }
+
+    const handleLogout = async () => {
+        setLogoutError("")
+        try {
+            const res = await request<LogoutResponse>("/logout", {
+                method: "POST",
+                csrf: true,
+                csrfUseCache: false,
+            });
+
+            if (res.code == 200) {
+                navigate({to: "/login"})
+            } else {
+                setLogoutError(res.msg || "登出失败")
+            }
+
+        } catch (err: unknown) {
+            setLogoutError(err instanceof Error ? err.message : "登出请求异常")
+        }
     }
 
     const adminNavItems = getAdminNavItems(activeItem)
@@ -339,11 +366,11 @@ export default function UserManagement() {
                             返回首页
                         </SidebarNavItem>
                         <SidebarNavItem onClick={goToProfile}>
-                            <Shield className="h-4 w-4"/>
+                            <User className="h-4 w-4"/>
                             个人资料
                         </SidebarNavItem>
-                        <SidebarNavItem>
-                            <Shield className="h-4 w-4"/>
+                        <SidebarNavItem onClick={handleLogout}>
+                            <LogOut className="h-4 w-4"/>
                             退出登录
                         </SidebarNavItem>
                     </SidebarNav>
@@ -725,6 +752,19 @@ export default function UserManagement() {
                     </Card>
                 </div>
             </SidebarMain>
+
+            {/* Logout Error Display */}
+            {logoutError && (
+                <div className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
+                    <p>{logoutError}</p>
+                    <button 
+                        onClick={() => setLogoutError("")}
+                        className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
             {/* Modals */}
             {showUserForm && (

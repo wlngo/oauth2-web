@@ -2,6 +2,7 @@ import {homeRoute} from './home'
 import {loginRoute} from './login'
 import {oauth2Consent} from './oauth2Consent'
 import {userProfileRoute} from './userProfile'
+import {adminProfileRoute} from './adminProfile'
 import {adminRedirectRoute} from './adminRedirect'
 import {userManagementRoute} from './userManagement'
 import {userManagementDemoRoute} from './userManagementDemo'
@@ -18,6 +19,7 @@ export const routeTree = rootRoute.addChildren([
     loginRoute,
     oauth2Consent,
     userProfileRoute,
+    adminProfileRoute,
     adminRedirectRoute,
     userManagementRoute,
     userManagementDemoRoute,
