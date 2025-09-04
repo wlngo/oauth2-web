@@ -7,17 +7,10 @@ import {
     Edit,
     Trash2,
     Eye,
-    Shield,
     ArrowLeft,
-    LayoutDashboard,
-    Users,
-    Key,
-    BarChart3,
-    Activity,
-    Settings,
     ChevronLeft,
     ChevronRight,
-    Menu
+    Key
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -48,17 +41,9 @@ import {
     deletePermission,
     type PermissionInfo
 } from "@/services/permissionService"
+import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
 
-const adminNavItems = [
-    { icon: LayoutDashboard, label: "仪表板", id: "dashboard" },
-    { icon: Users, label: "用户管理", id: "users" },
-    { icon: Shield, label: "角色管理", id: "roles" },
-    { icon: Key, label: "权限管理", id: "permissions", active: true },
-    { icon: Menu, label: "菜单管理", id: "menus" },
-    { icon: BarChart3, label: "数据统计", id: "analytics" },
-    { icon: Activity, label: "审计日志", id: "audit" },
-    { icon: Settings, label: "系统设置", id: "settings" },
-]
+
 
 export default function PermissionManagement() {
     const navigate = useNavigate()
@@ -106,16 +91,10 @@ export default function PermissionManagement() {
     // Navigation handlers
     const handleNavigation = (id: string) => {
         setActiveItem(id)
-        if (id === "dashboard") {
-            navigate({ to: "/admin" })
-        } else if (id === "users") {
-            navigate({ to: "/admin/users" })
-        } else if (id === "roles") {
-            navigate({ to: "/admin/roles" })
-        } else if (id === "menus") {
-            navigate({ to: "/admin/menus" })
-        }
+        handleAdminNavigation(id, navigate)
     }
+
+    const adminNavItems = getAdminNavItems(activeItem)
 
     const goHome = () => {
         navigate({ to: "/" })

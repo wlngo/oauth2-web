@@ -13,9 +13,10 @@ import {
     Calendar,
     CheckCircle,
     XCircle,
-    ArrowLeft, LayoutDashboard, Users, Key, BarChart3, Activity, Settings,
+    ArrowLeft,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Users
 } from "lucide-react"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
@@ -55,16 +56,9 @@ import type {
     CreateUserRequest,
     UpdateUserRequest
 } from "@/services/userService"
+import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
 
-const adminNavItems = [
-    {icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true},
-    {icon: Users, label: "用户管理", id: "users"},
-    {icon: Key, label: "应用管理", id: "applications"},
-    {icon: Shield, label: "权限管理", id: "permissions"},
-    {icon: BarChart3, label: "数据统计", id: "analytics"},
-    {icon: Activity, label: "审计日志", id: "audit"},
-    {icon: Settings, label: "系统设置", id: "settings"},
-]
+
 
 export default function UserManagement() {
     const navigate = useNavigate()
@@ -129,10 +123,7 @@ export default function UserManagement() {
 
     const handleNavigation = (id: string) => {
         setActiveItem(id)
-        if (id === "dashboard") {
-            navigate({to: "/admin"})
-        }
-        // 其他导航逻辑可以在这里添加
+        handleAdminNavigation(id, navigate)
     }
 
     const goHome = () => {
@@ -146,6 +137,8 @@ export default function UserManagement() {
     const goBack = () => {
         navigate({to: "/admin"})
     }
+
+    const adminNavItems = getAdminNavItems(activeItem)
 
     const getInitials = (name?: string) => {
         if (!name) return "U"
