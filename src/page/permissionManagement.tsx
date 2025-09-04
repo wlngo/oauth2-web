@@ -10,7 +10,9 @@ import {
     ArrowLeft,
     ChevronLeft,
     ChevronRight,
-    Key
+    Key,
+    User,
+    LogOut
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -48,6 +50,12 @@ import {
 import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
 import { PermissionForm } from "@/components/PermissionForm"
 import { DeleteConfirmationModal } from "@/components/DeleteConfirmationModal"
+import { request } from "@/lib/http"
+
+interface LogoutResponse {
+    code: number
+    msg?: string
+}
 
 
 
@@ -114,6 +122,31 @@ export default function PermissionManagement() {
 
     const goHome = () => {
         navigate({ to: "/" })
+    }
+
+    const goToProfile = () => {
+        navigate({ to: "/admin/profile" })
+    }
+
+    const handleLogout = async () => {
+        try {
+            const res = await request<LogoutResponse>("/logout", {
+                method: "POST",
+                csrf: true,
+                csrfUseCache: false,
+            });
+
+            if (res.code == 200) {
+                navigate({ to: "/login" })
+            } else {
+                // Could show error in a toast or alert, but for simplicity just navigate
+                navigate({ to: "/login" })
+            }
+
+        } catch {
+            // Could show error in a toast or alert, but for simplicity just navigate  
+            navigate({ to: "/login" })
+        }
     }
 
     // Pagination handlers
@@ -264,6 +297,14 @@ export default function PermissionManagement() {
                         <SidebarNavItem onClick={goHome}>
                             <ArrowLeft className="h-4 w-4" />
                             返回首页
+                        </SidebarNavItem>
+                        <SidebarNavItem onClick={goToProfile}>
+                            <User className="h-4 w-4" />
+                            个人资料
+                        </SidebarNavItem>
+                        <SidebarNavItem onClick={handleLogout}>
+                            <LogOut className="h-4 w-4" />
+                            退出登录
                         </SidebarNavItem>
                     </SidebarNav>
                 </SidebarContent>
