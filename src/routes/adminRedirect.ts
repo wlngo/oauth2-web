@@ -1,17 +1,16 @@
 import { createRoute, redirect } from '@tanstack/react-router'
 import { rootRoute } from './router'
-import RolePermissionRelationManagement from '@/page/rolePermissionRelationManagement'
 import { isAuthenticated } from './auth'
 
-export const rolePermissionRelationManagementRoute = createRoute({
+export const adminRedirectRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/admin/role-permissions',
-  component: RolePermissionRelationManagement,
+  path: '/admin',
   beforeLoad: async () => {
     const authed = await isAuthenticated()
     if (!authed) {
       throw redirect({to: '/login'})
     }
-    return true
+    // Redirect to users management as the default admin page
+    throw redirect({to: '/admin/users'})
   },
 })

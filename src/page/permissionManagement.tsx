@@ -38,10 +38,16 @@ import { Separator } from "@/components/ui/separator"
 
 import {
     getAllPermissions,
+    createPermission,
+    updatePermission,
     deletePermission,
-    type PermissionInfo
+    type PermissionInfo,
+    type CreatePermissionRequest,
+    type UpdatePermissionRequest
 } from "@/services/permissionService"
 import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
+import { PermissionForm } from "@/components/PermissionForm"
+import { DeleteConfirmationModal } from "@/components/DeleteConfirmationModal"
 
 
 
@@ -59,6 +65,16 @@ export default function PermissionManagement() {
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(10)
     const [total, setTotal] = useState(0)
+
+    // Form states
+    const [showPermissionForm, setShowPermissionForm] = useState(false)
+    const [editingPermission, setEditingPermission] = useState<PermissionInfo | null>(null)
+    const [formLoading, setFormLoading] = useState(false)
+
+    // Delete confirmation states
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+    const [deletingPermission, setDeletingPermission] = useState<PermissionInfo | null>(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
 
     // Load permissions
     const loadPermissions = useCallback(async (keyword?: string, page: number = 1) => {
@@ -120,13 +136,16 @@ export default function PermissionManagement() {
 
     // Permission actions
     const handleAddPermission = () => {
-        // TODO: Implement add permission dialog
-        console.log("Add permission")
+        setEditingPermission(null)
+        setShowPermissionForm(true)
     }
 
     const handleEditPermission = (permissionId: number) => {
-        // TODO: Implement edit permission dialog
-        console.log("Edit permission:", permissionId)
+        const permission = permissions.find(p => p.permissionId === permissionId)
+        if (permission) {
+            setEditingPermission(permission)
+            setShowPermissionForm(true)
+        }
     }
 
     const handleViewPermission = (permissionId: number) => {
@@ -134,15 +153,62 @@ export default function PermissionManagement() {
         console.log("View permission:", permissionId)
     }
 
-    const handleDeletePermission = async (permissionId: number) => {
-        if (window.confirm('确定要删除这个权限吗？')) {
-            try {
-                await deletePermission(permissionId)
-                loadPermissions(searchTerm || undefined, currentPage)
-            } catch (err) {
-                setError(err instanceof Error ? err.message : '删除权限失败')
-            }
+    const handleDeletePermission = (permissionId: number) => {
+        const permission = permissions.find(p => p.permissionId === permissionId)
+        if (permission) {
+            setDeletingPermission(permission)
+            setShowDeleteConfirmation(true)
         }
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!deletingPermission) return
+
+        try {
+            setDeleteLoading(true)
+            await deletePermission(deletingPermission.permissionId!)
+            await loadPermissions(searchTerm || undefined, currentPage)
+            setShowDeleteConfirmation(false)
+            setDeletingPermission(null)
+        } catch (err) {
+            console.error('Failed to delete permission:', err)
+            alert(err instanceof Error ? err.message : '删除权限失败')
+        } finally {
+            setDeleteLoading(false)
+        }
+    }
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirmation(false)
+        setDeletingPermission(null)
+    }
+
+    const handleFormSubmit = async (permissionData: CreatePermissionRequest | UpdatePermissionRequest) => {
+        try {
+            setFormLoading(true)
+
+            if (editingPermission) {
+                // Update existing permission
+                await updatePermission(permissionData as UpdatePermissionRequest)
+            } else {
+                // Create new permission
+                await createPermission(permissionData as CreatePermissionRequest)
+            }
+
+            setShowPermissionForm(false)
+            setEditingPermission(null)
+            await loadPermissions(searchTerm || undefined, currentPage)
+        } catch (err) {
+            console.error('Failed to save permission:', err)
+            alert(err instanceof Error ? err.message : '保存权限失败')
+        } finally {
+            setFormLoading(false)
+        }
+    }
+
+    const handleFormCancel = () => {
+        setShowPermissionForm(false)
+        setEditingPermission(null)
     }
 
     // Format date helper
@@ -386,6 +452,31 @@ export default function PermissionManagement() {
                     </Card>
                 </div>
             </SidebarMain>
+
+            {/* Permission Form Modal */}
+            {showPermissionForm && (
+                <PermissionForm
+                    permission={editingPermission || undefined}
+                    onSubmit={handleFormSubmit}
+                    onCancel={handleFormCancel}
+                    isLoading={formLoading}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirmation && deletingPermission && (
+                <DeleteConfirmationModal
+                    user={{
+                        userId: deletingPermission.permissionId?.toString(),
+                        username: deletingPermission.permissionName,
+                        email: deletingPermission.permissionCode,
+                        realName: deletingPermission.permissionCode
+                    }}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                    isLoading={deleteLoading}
+                />
+            )}
         </SidebarProvider>
     )
 }

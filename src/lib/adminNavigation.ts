@@ -1,12 +1,7 @@
 import { 
-  LayoutDashboard, 
   Users, 
-  Settings, 
   Shield, 
   Key, 
-  BarChart3, 
-  Activity,
-  Menu,
   Link
 } from "lucide-react"
 
@@ -21,15 +16,10 @@ export interface AdminNavItem {
 
 // Base admin navigation items (without active state)
 export const adminNavItemsBase: Omit<AdminNavItem, 'active'>[] = [
-  { icon: LayoutDashboard, label: "仪表板", id: "dashboard" },
   { icon: Users, label: "用户管理", id: "users" },
   { icon: Shield, label: "角色管理", id: "roles" },
   { icon: Key, label: "权限管理", id: "permissions" },
-  { icon: Menu, label: "菜单管理", id: "menus" },
   { icon: Link, label: "角色权限关系", id: "role-permissions" },
-  { icon: BarChart3, label: "数据统计", id: "analytics" },
-  { icon: Activity, label: "审计日志", id: "audit" },
-  { icon: Settings, label: "系统设置", id: "settings" },
 ]
 
 /**
@@ -61,24 +51,11 @@ export function handleAdminNavigation(id: string, navigate: (options: { to: stri
     case "permissions":
       navigate({ to: "/admin/permissions" })
       break
-    case "menus":
-      navigate({ to: "/admin/menus" })
-      break
     case "role-permissions":
       navigate({ to: "/admin/role-permissions" })
       break
-    case "analytics":
-      // navigate({ to: "/admin/analytics" })
-      break
-    case "audit":
-      // navigate({ to: "/admin/audit" })
-      break
-    case "settings":
-      // navigate({ to: "/admin/settings" })
-      break
-    case "dashboard":
     default:
-      navigate({ to: "/admin" })
+      navigate({ to: "/admin/users" }) // Default to users management
       break
   }
 }
