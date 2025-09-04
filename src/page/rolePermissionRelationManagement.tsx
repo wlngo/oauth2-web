@@ -40,10 +40,16 @@ import { Separator } from "@/components/ui/separator"
 
 import {
     getRolePermissionRelations,
+    createRolePermissionRelation,
+    updateRolePermissionRelation,
     deleteRolePermissionRelation,
-    type RolePermissionRelation
+    type RolePermissionRelation,
+    type CreateRolePermissionRelationRequest,
+    type UpdateRolePermissionRelationRequest
 } from "@/services/rolePermissionRelationService"
 import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
+import { RolePermissionRelationForm } from "@/components/RolePermissionRelationForm"
+import { DeleteConfirmationModal } from "@/components/DeleteConfirmationModal"
 
 
 
@@ -61,6 +67,16 @@ export default function RolePermissionRelationManagement() {
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(10)
     const [total, setTotal] = useState(0)
+
+    // Form states
+    const [showRelationForm, setShowRelationForm] = useState(false)
+    const [editingRelation, setEditingRelation] = useState<RolePermissionRelation | null>(null)
+    const [formLoading, setFormLoading] = useState(false)
+
+    // Delete confirmation states
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+    const [deletingRelation, setDeletingRelation] = useState<RolePermissionRelation | null>(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
 
     // Load relations
     const loadRelations = useCallback(async (roleId?: string, permissionId?: string, page: number = 1) => {
@@ -131,13 +147,16 @@ export default function RolePermissionRelationManagement() {
 
     // Relation actions
     const handleAddRelation = () => {
-        // TODO: Implement add relation dialog
-        console.log("Add role-permission relation")
+        setEditingRelation(null)
+        setShowRelationForm(true)
     }
 
     const handleEditRelation = (relationId: string) => {
-        // TODO: Implement edit relation dialog
-        console.log("Edit relation:", relationId)
+        const relation = relations.find(r => r.id === relationId)
+        if (relation) {
+            setEditingRelation(relation)
+            setShowRelationForm(true)
+        }
     }
 
     const handleViewRelation = (relationId: string) => {
@@ -145,15 +164,62 @@ export default function RolePermissionRelationManagement() {
         console.log("View relation:", relationId)
     }
 
-    const handleDeleteRelation = async (relationId: string) => {
-        if (window.confirm('确定要删除这个角色权限关系吗？')) {
-            try {
-                await deleteRolePermissionRelation(relationId)
-                loadRelations(undefined, undefined, currentPage)
-            } catch (err) {
-                setError(err instanceof Error ? err.message : '删除角色权限关系失败')
-            }
+    const handleDeleteRelation = (relationId: string) => {
+        const relation = relations.find(r => r.id === relationId)
+        if (relation) {
+            setDeletingRelation(relation)
+            setShowDeleteConfirmation(true)
         }
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!deletingRelation) return
+
+        try {
+            setDeleteLoading(true)
+            await deleteRolePermissionRelation(deletingRelation.id!)
+            await loadRelations(undefined, undefined, currentPage)
+            setShowDeleteConfirmation(false)
+            setDeletingRelation(null)
+        } catch (err) {
+            console.error('Failed to delete relation:', err)
+            alert(err instanceof Error ? err.message : '删除角色权限关系失败')
+        } finally {
+            setDeleteLoading(false)
+        }
+    }
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirmation(false)
+        setDeletingRelation(null)
+    }
+
+    const handleFormSubmit = async (relationData: CreateRolePermissionRelationRequest | UpdateRolePermissionRelationRequest) => {
+        try {
+            setFormLoading(true)
+
+            if (editingRelation) {
+                // Update existing relation
+                await updateRolePermissionRelation(relationData as UpdateRolePermissionRelationRequest)
+            } else {
+                // Create new relation
+                await createRolePermissionRelation(relationData as CreateRolePermissionRelationRequest)
+            }
+
+            setShowRelationForm(false)
+            setEditingRelation(null)
+            await loadRelations(undefined, undefined, currentPage)
+        } catch (err) {
+            console.error('Failed to save relation:', err)
+            alert(err instanceof Error ? err.message : '保存角色权限关系失败')
+        } finally {
+            setFormLoading(false)
+        }
+    }
+
+    const handleFormCancel = () => {
+        setShowRelationForm(false)
+        setEditingRelation(null)
     }
 
     const totalPages = Math.ceil(total / pageSize)
@@ -410,6 +476,31 @@ export default function RolePermissionRelationManagement() {
                     </Card>
                 </div>
             </SidebarMain>
+
+            {/* Relation Form Modal */}
+            {showRelationForm && (
+                <RolePermissionRelationForm
+                    relation={editingRelation || undefined}
+                    onSubmit={handleFormSubmit}
+                    onCancel={handleFormCancel}
+                    isLoading={formLoading}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirmation && deletingRelation && (
+                <DeleteConfirmationModal
+                    user={{
+                        userId: deletingRelation.id,
+                        username: `关系 ${deletingRelation.id}`,
+                        email: `Role: ${deletingRelation.roleId}, Permission: ${deletingRelation.permissionId}`,
+                        realName: '角色权限关系'
+                    }}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                    isLoading={deleteLoading}
+                />
+            )}
         </SidebarProvider>
     )
 }

@@ -38,10 +38,16 @@ import { Separator } from "@/components/ui/separator"
 
 import {
     getAllRoles,
+    createRole,
+    updateRole,
     deleteRole,
-    type RoleInfo
+    type RoleInfo,
+    type CreateRoleRequest,
+    type UpdateRoleRequest
 } from "@/services/roleService"
 import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
+import { RoleForm } from "@/components/RoleForm"
+import { DeleteConfirmationModal } from "@/components/DeleteConfirmationModal"
 
 
 
@@ -59,6 +65,16 @@ export default function RoleManagement() {
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(10)
     const [total, setTotal] = useState(0)
+
+    // Form states
+    const [showRoleForm, setShowRoleForm] = useState(false)
+    const [editingRole, setEditingRole] = useState<RoleInfo | null>(null)
+    const [formLoading, setFormLoading] = useState(false)
+
+    // Delete confirmation states
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+    const [deletingRole, setDeletingRole] = useState<RoleInfo | null>(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
 
     // Load roles
     const loadRoles = useCallback(async (keyword?: string, page: number = 1) => {
@@ -120,13 +136,16 @@ export default function RoleManagement() {
 
     // Role actions
     const handleAddRole = () => {
-        // TODO: Implement add role dialog
-        console.log("Add role")
+        setEditingRole(null)
+        setShowRoleForm(true)
     }
 
     const handleEditRole = (roleId: string) => {
-        // TODO: Implement edit role dialog
-        console.log("Edit role:", roleId)
+        const role = roles.find(r => r.roleId === roleId)
+        if (role) {
+            setEditingRole(role)
+            setShowRoleForm(true)
+        }
     }
 
     const handleViewRole = (roleId: string) => {
@@ -135,14 +154,61 @@ export default function RoleManagement() {
     }
 
     const handleDeleteRole = async (roleId: string) => {
-        if (window.confirm('确定要删除这个角色吗？')) {
-            try {
-                await deleteRole(roleId)
-                loadRoles(searchTerm || undefined, currentPage)
-            } catch (err) {
-                setError(err instanceof Error ? err.message : '删除角色失败')
-            }
+        const role = roles.find(r => r.roleId === roleId)
+        if (role) {
+            setDeletingRole(role)
+            setShowDeleteConfirmation(true)
         }
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!deletingRole) return
+
+        try {
+            setDeleteLoading(true)
+            await deleteRole(deletingRole.roleId!)
+            await loadRoles(searchTerm || undefined, currentPage) // Reload the role list
+            setShowDeleteConfirmation(false)
+            setDeletingRole(null)
+        } catch (err) {
+            console.error('Failed to delete role:', err)
+            alert(err instanceof Error ? err.message : '删除角色失败')
+        } finally {
+            setDeleteLoading(false)
+        }
+    }
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirmation(false)
+        setDeletingRole(null)
+    }
+
+    const handleFormSubmit = async (roleData: CreateRoleRequest | UpdateRoleRequest) => {
+        try {
+            setFormLoading(true)
+
+            if (editingRole) {
+                // Update existing role
+                await updateRole(roleData as UpdateRoleRequest)
+            } else {
+                // Create new role
+                await createRole(roleData as CreateRoleRequest)
+            }
+
+            setShowRoleForm(false)
+            setEditingRole(null)
+            await loadRoles(searchTerm || undefined, currentPage) // Reload the role list
+        } catch (err) {
+            console.error('Failed to save role:', err)
+            alert(err instanceof Error ? err.message : '保存角色失败')
+        } finally {
+            setFormLoading(false)
+        }
+    }
+
+    const handleFormCancel = () => {
+        setShowRoleForm(false)
+        setEditingRole(null)
     }
 
     // Format date helper
@@ -379,6 +445,31 @@ export default function RoleManagement() {
                     </Card>
                 </div>
             </SidebarMain>
+
+            {/* Role Form Modal */}
+            {showRoleForm && (
+                <RoleForm
+                    role={editingRole || undefined}
+                    onSubmit={handleFormSubmit}
+                    onCancel={handleFormCancel}
+                    isLoading={formLoading}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirmation && deletingRole && (
+                <DeleteConfirmationModal
+                    user={{
+                        userId: deletingRole.roleId,
+                        username: deletingRole.roleName,
+                        email: deletingRole.description || '',
+                        realName: deletingRole.roleContent
+                    }}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                    isLoading={deleteLoading}
+                />
+            )}
         </SidebarProvider>
     )
 }
