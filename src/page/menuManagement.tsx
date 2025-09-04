@@ -7,14 +7,7 @@ import {
     Edit,
     Trash2,
     Eye,
-    Shield,
     ArrowLeft,
-    LayoutDashboard,
-    Users,
-    Key,
-    BarChart3,
-    Activity,
-    Settings,
     ChevronLeft,
     ChevronRight,
     Menu,
@@ -51,17 +44,9 @@ import {
     deleteMenu,
     type MenuInfo
 } from "@/services/menuService"
+import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
 
-const adminNavItems = [
-    { icon: LayoutDashboard, label: "仪表板", id: "dashboard" },
-    { icon: Users, label: "用户管理", id: "users" },
-    { icon: Shield, label: "角色管理", id: "roles" },
-    { icon: Key, label: "权限管理", id: "permissions" },
-    { icon: Menu, label: "菜单管理", id: "menus", active: true },
-    { icon: BarChart3, label: "数据统计", id: "analytics" },
-    { icon: Activity, label: "审计日志", id: "audit" },
-    { icon: Settings, label: "系统设置", id: "settings" },
-]
+
 
 export default function MenuManagement() {
     const navigate = useNavigate()
@@ -109,16 +94,10 @@ export default function MenuManagement() {
     // Navigation handlers
     const handleNavigation = (id: string) => {
         setActiveItem(id)
-        if (id === "dashboard") {
-            navigate({ to: "/admin" })
-        } else if (id === "users") {
-            navigate({ to: "/admin/users" })
-        } else if (id === "roles") {
-            navigate({ to: "/admin/roles" })
-        } else if (id === "permissions") {
-            navigate({ to: "/admin/permissions" })
-        }
+        handleAdminNavigation(id, navigate)
     }
+
+    const adminNavItems = getAdminNavItems(activeItem)
 
     const goHome = () => {
         navigate({ to: "/" })

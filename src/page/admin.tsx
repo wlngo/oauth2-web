@@ -1,17 +1,14 @@
 import { useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  Shield, 
-  Key, 
-  BarChart3, 
+  Users,
+  Shield,
+  Key,
+  BarChart3,
   Activity,
   LogOut,
   Home,
-  User,
-  Menu
+  User
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -27,17 +24,9 @@ import {
   SidebarMain,
   SidebarToggle,
 } from "@/components/ui/sidebar"
+import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
 
-const adminNavItems = [
-  { icon: LayoutDashboard, label: "仪表板", id: "dashboard", active: true },
-  { icon: Users, label: "用户管理", id: "users" },
-  { icon: Shield, label: "角色管理", id: "roles" },
-  { icon: Key, label: "权限管理", id: "permissions" },
-  { icon: Menu, label: "菜单管理", id: "menus" },
-  { icon: BarChart3, label: "数据统计", id: "analytics" },
-  { icon: Activity, label: "审计日志", id: "audit" },
-  { icon: Settings, label: "系统设置", id: "settings" },
-]
+
 
 const dashboardStats = [
   {
@@ -115,17 +104,7 @@ export default function AdminDashboard() {
 
   const handleNavigation = (id: string) => {
     setActiveItem(id)
-    // 根据导航项ID进行路由跳转
-    if (id === "users") {
-      navigate({ to: "/admin/users" })
-    } else if (id === "roles") {
-      navigate({ to: "/admin/roles" })
-    } else if (id === "permissions") {
-      navigate({ to: "/admin/permissions" })
-    } else if (id === "menus") {
-      navigate({ to: "/admin/menus" })
-    }
-    // 其他导航逻辑可以在这里添加
+    handleAdminNavigation(id, navigate)
   }
 
   const goHome = () => {
@@ -135,6 +114,8 @@ export default function AdminDashboard() {
   const goToProfile = () => {
     navigate({ to: "/profile" })
   }
+
+  const adminNavItems = getAdminNavItems(activeItem)
 
   return (
     <SidebarProvider>
