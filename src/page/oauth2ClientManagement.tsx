@@ -402,10 +402,6 @@ export default function OAuth2ClientManagement() {
         navigate({to: "/admin/profile"})
     }
 
-    const goBack = () => {
-        navigate({to: "/admin"})
-    }
-
     // Client management handlers
     const handleCreateClient = () => {
         setEditingClient(null)
@@ -595,15 +591,9 @@ export default function OAuth2ClientManagement() {
                 <div className="space-y-6">
                     {/* Header */}
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
-                            <Button variant="outline" size="sm" onClick={goBack} className="w-fit">
-                                <ArrowLeft className="h-4 w-4 mr-2"/>
-                                返回仪表板
-                            </Button>
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold">OAuth2 客户端管理</h1>
-                                <p className="text-muted-foreground">管理 OAuth2 认证客户端</p>
-                            </div>
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold">OAuth2 客户端管理</h1>
+                            <p className="text-muted-foreground">管理 OAuth2 认证客户端</p>
                         </div>
                         <Button onClick={handleCreateClient} className="w-fit">
                             <Plus className="h-4 w-4 mr-2"/>
