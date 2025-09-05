@@ -177,7 +177,7 @@ export default function OAuth2ClientManagementDemo() {
                         {/* Mobile Cards */}
                         <div className="lg:hidden space-y-4 mt-6">
                             {mockClients.map((client) => (
-                                <Card key={client.id} className="p-4">
+                                <Card key={client.id} className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200">
                                     <div className="space-y-4">
                                         {/* Client Header */}
                                         <div className="flex items-center gap-3">
