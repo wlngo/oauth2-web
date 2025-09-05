@@ -24,7 +24,6 @@ import {
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
-import {Badge} from "@/components/ui/badge"
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import {
     Table,
@@ -192,24 +191,7 @@ export default function UserManagement() {
         }
     }
 
-    const getRoleDisplay = (authorities?: string[]) => {
-        if (!authorities || authorities.length === 0) return "无角色"
 
-        const roleMap: Record<string, { label: string; color: string }> = {
-            ADMIN: {label: "管理员", color: "bg-red-100 text-red-700"},
-            MODERATOR: {label: "版主", color: "bg-blue-100 text-blue-700"},
-            USER: {label: "用户", color: "bg-gray-100 text-gray-700"}
-        }
-
-        return authorities.map(auth => (
-            <Badge
-                key={auth}
-                className={`mr-1 ${roleMap[auth]?.color || "bg-gray-100 text-gray-700"}`}
-            >
-                {roleMap[auth]?.label || auth}
-            </Badge>
-        ))
-    }
 
     // Users are now filtered by API, no need for client-side filtering
     const displayedUsers = users
@@ -468,7 +450,6 @@ export default function UserManagement() {
                                                     <TableHead>用户</TableHead>
                                                     <TableHead>联系信息</TableHead>
                                                     <TableHead>验证状态</TableHead>
-                                                    <TableHead>角色权限</TableHead>
                                                     <TableHead>创建时间</TableHead>
                                                     <TableHead className="text-right">操作</TableHead>
                                                 </TableRow>
@@ -537,11 +518,7 @@ export default function UserManagement() {
                                                                 </div>
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {getRoleDisplay(user.authorities)}
-                                                            </div>
-                                                        </TableCell>
+
                                                         <TableCell>
                                                             <div className="flex items-center gap-2 text-sm">
                                                                 <Calendar className="h-3 w-3"/>
@@ -635,10 +612,7 @@ export default function UserManagement() {
                                                         )}
                                                     </div>
 
-                                                    {/* Roles */}
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {getRoleDisplay(user.authorities)}
-                                                    </div>
+
 
                                                     {/* Creation Date */}
                                                     <div

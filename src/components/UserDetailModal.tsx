@@ -1,6 +1,5 @@
 import { X, Mail, Phone, Calendar, CheckCircle, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { UserInfo } from "@/services/userService"
 
@@ -24,24 +23,7 @@ export function UserDetailModal({ user, onClose, onEdit }: UserDetailModalProps)
     }
   }
 
-  const getRoleDisplay = (authorities?: string[]) => {
-    if (!authorities || authorities.length === 0) return "无角色"
-    
-    const roleMap: Record<string, { label: string; color: string }> = {
-      ADMIN: { label: "管理员", color: "bg-red-100 text-red-700" },
-      MODERATOR: { label: "版主", color: "bg-blue-100 text-blue-700" },
-      USER: { label: "用户", color: "bg-gray-100 text-gray-700" }
-    }
 
-    return authorities.map(auth => (
-      <Badge 
-        key={auth} 
-        className={`mr-1 ${roleMap[auth]?.color || "bg-gray-100 text-gray-700"}`}
-      >
-        {roleMap[auth]?.label || auth}
-      </Badge>
-    ))
-  }
 
   const getAccountStatus = () => {
     if (user.disabled) return { text: "已禁用", color: "text-red-600" }
@@ -160,13 +142,6 @@ export function UserDetailModal({ user, onClose, onEdit }: UserDetailModalProps)
             </div>
           </div>
 
-          {/* Roles */}
-          <div>
-            <h4 className="font-medium text-gray-900 border-b pb-2 mb-3">角色权限</h4>
-            <div className="flex flex-wrap gap-1">
-              {getRoleDisplay(user.authorities)}
-            </div>
-          </div>
 
           {/* Account Status Details */}
           <div>

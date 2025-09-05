@@ -103,24 +103,7 @@ export default function UserManagementDemo() {
     return new Date(dateString).toLocaleDateString("zh-CN")
   }
 
-  const getRoleDisplay = (authorities?: string[]) => {
-    if (!authorities || authorities.length === 0) return "无角色"
-    
-    const roleMap: Record<string, { label: string; color: string }> = {
-      ADMIN: { label: "管理员", color: "bg-red-100 text-red-700" },
-      MODERATOR: { label: "版主", color: "bg-blue-100 text-blue-700" },
-      USER: { label: "用户", color: "bg-gray-100 text-gray-700" }
-    }
 
-    return authorities.map(auth => (
-      <Badge 
-        key={auth} 
-        className={`mr-1 ${roleMap[auth]?.color || "bg-gray-100 text-gray-700"}`}
-      >
-        {roleMap[auth]?.label || auth}
-      </Badge>
-    ))
-  }
 
   const handleAddUser = () => {
     setEditingUser(null)
@@ -322,10 +305,7 @@ export default function UserManagementDemo() {
                         )}
                       </div>
 
-                      {/* Roles */}
-                      <div className="flex flex-wrap gap-1">
-                        {getRoleDisplay(user.authorities)}
-                      </div>
+
 
                       {/* Creation Date */}
                       <div className="text-xs text-muted-foreground">
