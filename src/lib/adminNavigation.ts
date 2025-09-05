@@ -1,7 +1,8 @@
 import { 
   Users, 
   Shield, 
-  Key
+  Key,
+  Settings
 } from "lucide-react"
 
 import type { LucideIcon } from "lucide-react"
@@ -18,6 +19,7 @@ export const adminNavItemsBase: Omit<AdminNavItem, 'active'>[] = [
   { icon: Users, label: "用户管理", id: "users" },
   { icon: Shield, label: "角色管理", id: "roles" },
   { icon: Key, label: "权限管理", id: "permissions" },
+  { icon: Settings, label: "OAuth2客户端", id: "oauth2-clients" },
 ]
 
 /**
@@ -48,6 +50,9 @@ export function handleAdminNavigation(id: string, navigate: (options: { to: stri
       break
     case "permissions":
       navigate({ to: "/admin/permissions" })
+      break
+    case "oauth2-clients":
+      navigate({ to: "/admin/oauth2-clients" })
       break
     default:
       navigate({ to: "/admin/users" }) // Default to users management
