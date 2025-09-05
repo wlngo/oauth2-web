@@ -357,10 +357,15 @@ export default function OAuth2ClientManagement() {
         }
     }, [currentPage, pageSize])
 
-    // Initial load and search effect
+    // Handle search term changes - reset to first page
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm])
+
+    // Load data when page or search term changes
     useEffect(() => {
         loadClients(searchTerm || undefined)
-    }, [loadClients, searchTerm])
+    }, [currentPage, searchTerm, loadClients])
 
     // Pagination calculations
     const totalPages = Math.ceil(totalClients / pageSize)
@@ -481,8 +486,11 @@ export default function OAuth2ClientManagement() {
 
     const handleJumpToPage = () => {
         const page = parseInt(jumpToPage)
-        if (page >= 1 && page <= totalPages) {
+        if (!isNaN(page) && page >= 1 && page <= totalPages) {
             setCurrentPage(page)
+            setJumpToPage("")
+        } else {
+            // Reset invalid input
             setJumpToPage("")
         }
     }
@@ -599,6 +607,24 @@ export default function OAuth2ClientManagement() {
                                     </div>
                                 ) : (
                                     <>
+                                        {clients.length === 0 ? (
+                                            <div className="text-center py-12">
+                                                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                                    {searchTerm ? '未找到匹配的客户端' : '暂无OAuth2客户端'}
+                                                </h3>
+                                                <p className="text-gray-500 mb-4">
+                                                    {searchTerm ? '请尝试调整搜索条件' : '开始创建您的第一个OAuth2客户端'}
+                                                </p>
+                                                {!searchTerm && (
+                                                    <Button onClick={handleCreateClient} className="flex items-center gap-2 mx-auto">
+                                                        <Plus className="h-4 w-4" />
+                                                        新建客户端
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <>
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
@@ -738,8 +764,10 @@ export default function OAuth2ClientManagement() {
                                                 </div>
                                             </div>
                                         )}
-                                    </>
-                                )}
+                                        </>
+                                    )}
+                                </>
+                            )}
                             </CardContent>
                         </Card>
                     </div>
