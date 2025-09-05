@@ -1,8 +1,7 @@
 import { 
   Users, 
   Shield, 
-  Key, 
-  Link
+  Key
 } from "lucide-react"
 
 import type { LucideIcon } from "lucide-react"
@@ -19,7 +18,6 @@ export const adminNavItemsBase: Omit<AdminNavItem, 'active'>[] = [
   { icon: Users, label: "用户管理", id: "users" },
   { icon: Shield, label: "角色管理", id: "roles" },
   { icon: Key, label: "权限管理", id: "permissions" },
-  { icon: Link, label: "角色权限关系", id: "role-permissions" },
 ]
 
 /**
@@ -50,9 +48,6 @@ export function handleAdminNavigation(id: string, navigate: (options: { to: stri
       break
     case "permissions":
       navigate({ to: "/admin/permissions" })
-      break
-    case "role-permissions":
-      navigate({ to: "/admin/role-permissions" })
       break
     default:
       navigate({ to: "/admin/users" }) // Default to users management
