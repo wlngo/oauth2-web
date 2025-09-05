@@ -220,7 +220,7 @@ export default function OAuth2ClientManagementDemo() {
                                         </div>
 
                                         {/* Actions */}
-                                        <div className="space-y-2 pt-2 border-t bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 rounded-lg p-3 -mx-1">
+                                        <div className="space-y-2 pt-2 border-t bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 backdrop-blur-sm rounded-lg p-3 -mx-1">
                                             <Button 
                                                 variant="outline" 
                                                 size="sm"
