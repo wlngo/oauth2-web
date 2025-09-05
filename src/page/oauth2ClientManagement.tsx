@@ -496,7 +496,7 @@ export default function OAuth2ClientManagement() {
             } else {
                 setLogoutError(response.msg || '登出失败')
             }
-        } catch (error) {
+        } catch {
             setLogoutError('登出失败，请重试')
         }
     }
