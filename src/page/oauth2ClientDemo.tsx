@@ -90,7 +90,9 @@ export default function OAuth2ClientManagementDemo() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Table>
+                        {/* Desktop Table */}
+                        <div className="hidden lg:block">
+                            <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>客户端 ID</TableHead>
@@ -146,21 +148,21 @@ export default function OAuth2ClientManagementDemo() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="hover:bg-blue-50 hover:text-blue-600"
+                                                    className="hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950 dark:hover:text-blue-400"
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="hover:bg-green-50 hover:text-green-600"
+                                                    className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950 dark:hover:text-green-400"
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="hover:bg-red-50 hover:text-red-600"
+                                                    className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -170,6 +172,84 @@ export default function OAuth2ClientManagementDemo() {
                                 ))}
                             </TableBody>
                         </Table>
+                        </div>
+
+                        {/* Mobile Cards */}
+                        <div className="lg:hidden space-y-4 mt-6">
+                            {mockClients.map((client) => (
+                                <Card key={client.id} className="p-4">
+                                    <div className="space-y-4">
+                                        {/* Client Header */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                                                <Settings className="h-6 w-6 text-blue-600" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium truncate">{client.clientName}</div>
+                                                <div className="text-sm text-muted-foreground font-mono truncate">{client.clientId}</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Grant Types */}
+                                        <div className="space-y-2">
+                                            <div className="text-sm font-medium">授权类型:</div>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {client.authorizationGrantTypes.split(',').map((type, index) => (
+                                                    <Badge key={index} variant="secondary" className="text-xs">
+                                                        {type.trim()}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Scopes */}
+                                        <div className="space-y-2">
+                                            <div className="text-sm font-medium">权限范围:</div>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {client.scopes.split(',').map((scope, index) => (
+                                                    <Badge key={index} variant="outline" className="text-xs">
+                                                        {scope.trim()}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Creation Date */}
+                                        <div className="text-sm text-muted-foreground">
+                                            创建时间: {new Date(client.clientIdIssuedAt * 1000).toLocaleDateString()}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="space-y-2 pt-2 border-t bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 rounded-lg p-3 -mx-1">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-500 hover:border-blue-600 shadow-md hover:shadow-lg transition-all duration-200"
+                                            >
+                                                <Eye className="h-4 w-4 mr-2" />
+                                                查看
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-500 hover:border-green-600 shadow-md hover:shadow-lg transition-all duration-200"
+                                            >
+                                                <Edit className="h-4 w-4 mr-2" />
+                                                编辑
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-red-500 hover:border-red-600 shadow-md hover:shadow-lg transition-all duration-200"
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                删除
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
 
                         {/* Demo Form Preview */}
                         <div className="mt-8 p-6 bg-gray-50 rounded-lg">
