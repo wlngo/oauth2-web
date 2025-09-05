@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { X } from "lucide-react"
+import { X, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RolePermissionManagement } from "@/components/RolePermissionManagement"
 
 import type { CreateRoleRequest, UpdateRoleRequest, RoleInfo } from "@/services/roleService"
 
@@ -22,6 +23,7 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading }: RoleFormProps)
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showPermissionManagement, setShowPermissionManagement] = useState(false)
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -125,8 +127,27 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading }: RoleFormProps)
             <Button type="submit" disabled={isLoading}>
               {isLoading ? "保存中..." : "保存"}
             </Button>
+            {isEditMode && role?.roleId && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowPermissionManagement(true)}
+                className="flex items-center gap-2"
+              >
+                <Lock className="h-4 w-4" />
+                管理权限
+              </Button>
+            )}
           </div>
         </form>
+
+        {/* Role Permission Management Modal */}
+        {showPermissionManagement && isEditMode && role?.roleId && (
+          <RolePermissionManagement 
+            roleId={role.roleId} 
+            onClose={() => setShowPermissionManagement(false)} 
+          />
+        )}
       </div>
     </div>
   )

@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { X } from "lucide-react"
+import { X, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { UserRoleManagement } from "@/components/UserRoleManagement"
 
 import type { CreateUserRequest, UpdateUserRequest, UserInfo } from "@/services/userService"
 
@@ -28,6 +29,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showRoleManagement, setShowRoleManagement] = useState(false)
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -218,8 +220,27 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
             <Button type="submit" disabled={isLoading} className="flex-1">
               {isLoading ? "提交中..." : (isEditMode ? "更新" : "创建")}
             </Button>
+            {isEditMode && user?.userId && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowRoleManagement(true)}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                管理角色
+              </Button>
+            )}
           </div>
         </form>
+
+        {/* User Role Management Modal */}
+        {showRoleManagement && isEditMode && user?.userId && (
+          <UserRoleManagement 
+            userId={user.userId} 
+            onClose={() => setShowRoleManagement(false)} 
+          />
+        )}
       </div>
     </div>
   )
