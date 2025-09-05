@@ -11,7 +11,10 @@ import {
     ChevronLeft,
     ChevronRight,
     LogOut,
-    Settings
+    Settings,
+    ArrowLeft,
+    User,
+    Filter
 } from "lucide-react"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
@@ -35,6 +38,7 @@ import {
     SidebarToggle,
 } from "@/components/ui/sidebar"
 import {Badge} from "@/components/ui/badge"
+import {Separator} from "@/components/ui/separator"
 import {
     getAllOAuth2Clients,
     createOAuth2Client,
@@ -351,26 +355,34 @@ export default function OAuth2ClientManagement() {
             setClients(data.list)
             setTotalClients(data.total)
         } catch (err) {
+            console.error('Failed to load OAuth2 clients:', err)
             setError(err instanceof Error ? err.message : '加载OAuth2客户端失败')
+            // Fallback to empty list if API fails
+            setClients([])
+            setTotalClients(0)
         } finally {
             setLoading(false)
         }
     }, [currentPage, pageSize])
 
-    // Handle search term changes - reset to first page
+    // Debounced search effect
     useEffect(() => {
-        setCurrentPage(1)
-    }, [searchTerm])
+        const timeoutId = setTimeout(() => {
+            loadClients(searchTerm || undefined)
+        }, 300) // 300ms debounce
 
-    // Load data when page or search term changes
+        return () => clearTimeout(timeoutId)
+    }, [searchTerm, loadClients])
+
+    // Load clients on component mount and when page changes (not for search - that's handled by debounced effect)
     useEffect(() => {
-        loadClients(searchTerm || undefined)
-    }, [currentPage, searchTerm, loadClients])
+        if (!searchTerm) { // Only load when not searching, search is handled by debounced effect
+            loadClients()
+        }
+    }, [currentPage, pageSize, loadClients]) // eslint-disable-line react-hooks/exhaustive-deps
 
     // Pagination calculations
     const totalPages = Math.ceil(totalClients / pageSize)
-    const startIndex = (currentPage - 1) * pageSize + 1
-    const endIndex = Math.min(currentPage * pageSize, totalClients)
 
     // Navigation handlers
     const adminNavItems = getAdminNavItems("oauth2-clients")
@@ -380,6 +392,18 @@ export default function OAuth2ClientManagement() {
             return // Already on this page
         }
         handleAdminNavigation(id, navigate)
+    }
+
+    const goHome = () => {
+        navigate({to: "/"})
+    }
+
+    const goToProfile = () => {
+        navigate({to: "/admin/profile"})
+    }
+
+    const goBack = () => {
+        navigate({to: "/admin"})
     }
 
     // Client management handlers
@@ -471,18 +495,7 @@ export default function OAuth2ClientManagement() {
         setDeletingClient(null)
     }
 
-    // Pagination handlers
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1)
-        }
-    }
-
-    const handleNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1)
-        }
-    }
+    // Pagination handlers - using inline functions for better readability
 
     const handleJumpToPage = () => {
         const page = parseInt(jumpToPage)
@@ -495,136 +508,178 @@ export default function OAuth2ClientManagement() {
         }
     }
 
+    const handleJumpInputKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleJumpToPage()
+        }
+    }
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value)
+        // Reset to first page when search changes
+        setCurrentPage(1)
+    }
+
     // Logout handler
     const handleLogout = async () => {
+        setLogoutError("")
         try {
-            const response = await request<LogoutResponse>('/logout', { method: 'POST', csrf: true })
-            if (response.code === 200) {
-                navigate({ to: '/login' })
+            const res = await request<LogoutResponse>("/logout", {
+                method: "POST",
+                csrf: true,
+                csrfUseCache: false,
+            });
+
+            if (res.code == 200) {
+                navigate({to: "/login"})
             } else {
-                setLogoutError(response.msg || '登出失败')
+                setLogoutError(res.msg || "登出失败")
             }
-        } catch {
-            setLogoutError('登出失败，请重试')
+
+        } catch (err: unknown) {
+            setLogoutError(err instanceof Error ? err.message : "登出请求异常")
         }
     }
 
     return (
         <SidebarProvider>
-            <div className="min-h-screen bg-gray-50 flex">
-                <Sidebar className="border-r border-gray-200 bg-white">
-                    <SidebarHeader className="p-6 border-b border-gray-200">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Shield className="h-6 w-6 text-blue-600" />
-                            </div>
+            <SidebarToggle/>
+            <Sidebar>
+                <SidebarHeader>
+                    <div className="flex items-center gap-2">
+                        <div
+                            className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md">
+                            <Shield className="size-4"/>
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold">OAuth2 管理后台</h2>
+                            <p className="text-xs text-sidebar-foreground/60">客户端管理</p>
+                        </div>
+                    </div>
+                </SidebarHeader>
+
+                <SidebarContent>
+                    <SidebarNav>
+                        {adminNavItems.map((item) => (
+                            <SidebarNavItem
+                                key={item.id}
+                                active={item.active}
+                                onClick={() => handleNavigation(item.id)}
+                            >
+                                <item.icon className="h-4 w-4"/>
+                                {item.label}
+                            </SidebarNavItem>
+                        ))}
+                    </SidebarNav>
+
+                    <Separator className="my-4"/>
+
+                    <SidebarNav>
+                        <SidebarNavItem onClick={goHome}>
+                            <ArrowLeft className="h-4 w-4"/>
+                            返回首页
+                        </SidebarNavItem>
+                        <SidebarNavItem onClick={goToProfile}>
+                            <User className="h-4 w-4"/>
+                            个人资料
+                        </SidebarNavItem>
+                        <SidebarNavItem onClick={handleLogout}>
+                            <LogOut className="h-4 w-4"/>
+                            退出登录
+                        </SidebarNavItem>
+                    </SidebarNav>
+                </SidebarContent>
+            </Sidebar>
+
+            <SidebarMain>
+                <div className="space-y-6">
+                    {/* Header */}
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
+                            <Button variant="outline" size="sm" onClick={goBack} className="w-fit">
+                                <ArrowLeft className="h-4 w-4 mr-2"/>
+                                返回仪表板
+                            </Button>
                             <div>
-                                <h2 className="text-lg font-semibold text-gray-900">管理面板</h2>
-                                <p className="text-sm text-gray-600">OAuth2 客户端管理</p>
+                                <h1 className="text-2xl sm:text-3xl font-bold">OAuth2 客户端管理</h1>
+                                <p className="text-muted-foreground">管理 OAuth2 认证客户端</p>
                             </div>
                         </div>
-                    </SidebarHeader>
-
-                    <SidebarContent>
-                        <SidebarNav>
-                            {adminNavItems.map((item) => (
-                                <SidebarNavItem
-                                    key={item.id}
-                                    active={item.active}
-                                    onClick={() => handleNavigation(item.id)}
-                                >
-                                    <item.icon className="h-4 w-4" />
-                                    {item.label}
-                                </SidebarNavItem>
-                            ))}
-                        </SidebarNav>
-                    </SidebarContent>
-
-                    <div className="p-4 border-t border-gray-200 mt-auto">
-                        <Button
-                            variant="ghost"
-                            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={handleLogout}
-                        >
-                            <LogOut className="h-4 w-4 mr-3" />
-                            登出
+                        <Button onClick={handleCreateClient} className="w-fit">
+                            <Plus className="h-4 w-4 mr-2"/>
+                            新建客户端
                         </Button>
                     </div>
-                </Sidebar>
 
-                <SidebarMain className="flex-1">
-                    <div className="p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">OAuth2 客户端管理</h1>
-                                <p className="text-gray-600 mt-1">管理 OAuth2 认证客户端</p>
+                    {/* Search and Filter */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>客户端列表</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4 mb-6">
+                                <div className="relative flex-1 max-w-sm">
+                                    <Search
+                                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4"/>
+                                    <Input
+                                        placeholder="搜索客户端 ID 或名称..."
+                                        value={searchTerm}
+                                        onChange={handleSearchChange}
+                                        className="pl-10"
+                                    />
+                                </div>
+                                <Button variant="outline" size="sm" className="w-fit">
+                                    <Filter className="h-4 w-4 mr-2"/>
+                                    过滤
+                                </Button>
                             </div>
-                            <Button onClick={handleCreateClient} className="flex items-center gap-2">
-                                <Plus className="h-4 w-4" />
-                                新建客户端
-                            </Button>
-                        </div>
-
-                        {/* Search Bar */}
-                        <Card className="mb-6">
-                            <CardContent className="p-4">
-                                <div className="flex gap-4 items-center">
-                                    <div className="flex-1 relative">
-                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <Input
-                                            placeholder="搜索客户端 ID 或名称..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10"
-                                        />
+                            {/* Loading State */}
+                            {loading && (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="text-center">
+                                        <div
+                                            className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                                        <p className="text-muted-foreground">加载客户端列表中...</p>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            )}
 
-                        {/* Clients Table */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Settings className="h-5 w-5" />
-                                    OAuth2 客户端列表
-                                    <span className="text-sm font-normal text-gray-500">
-                                        (共 {totalClients} 个客户端)
-                                    </span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {error && (
-                                    <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                                        {error}
+                            {/* Error State */}
+                            {error && !loading && (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="text-center">
+                                        <p className="text-red-600 mb-4">{error}</p>
+                                        <Button onClick={() => loadClients(searchTerm || undefined)} variant="outline">
+                                            重新加载
+                                        </Button>
                                     </div>
-                                )}
+                                </div>
+                            )}
 
-                                {loading ? (
-                                    <div className="text-center py-8">
-                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                        <p className="mt-2 text-gray-600">加载中...</p>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {clients.length === 0 ? (
-                                            <div className="text-center py-12">
-                                                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                                    {searchTerm ? '未找到匹配的客户端' : '暂无OAuth2客户端'}
-                                                </h3>
-                                                <p className="text-gray-500 mb-4">
-                                                    {searchTerm ? '请尝试调整搜索条件' : '开始创建您的第一个OAuth2客户端'}
-                                                </p>
-                                                {!searchTerm && (
-                                                    <Button onClick={handleCreateClient} className="flex items-center gap-2 mx-auto">
-                                                        <Plus className="h-4 w-4" />
-                                                        新建客户端
-                                                    </Button>
-                                                )}
-                                            </div>
+                            {/* Empty State */}
+                            {!loading && !error && clients.length === 0 && (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="text-center">
+                                        <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
+                                        <p className="text-muted-foreground mb-4">
+                                            {searchTerm ? '未找到匹配的客户端' : '暂无OAuth2客户端'}
+                                        </p>
+                                        {searchTerm ? (
+                                            <p className="text-muted-foreground mb-4">请尝试调整搜索条件</p>
                                         ) : (
-                                            <>
+                                            <Button onClick={handleCreateClient}>
+                                                <Plus className="h-4 w-4 mr-2"/>
+                                                创建第一个客户端
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            {/* Clients Table - Mobile Responsive */}
+                            {!loading && !error && clients.length > 0 && (
+                                <div className="rounded-md border overflow-hidden">
+                                    {/* Desktop Table */}
+                                    <div className="hidden lg:block">
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
@@ -684,7 +739,7 @@ export default function OAuth2ClientManagement() {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="hover:bg-blue-50 hover:text-blue-600"
+                                                                    className="hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950 dark:hover:text-blue-400"
                                                                     onClick={() => handleViewClient(client.id!)}
                                                                 >
                                                                     <Eye className="h-4 w-4" />
@@ -692,7 +747,7 @@ export default function OAuth2ClientManagement() {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="hover:bg-green-50 hover:text-green-600"
+                                                                    className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950 dark:hover:text-green-400"
                                                                     onClick={() => handleEditClient(client.id!)}
                                                                 >
                                                                     <Edit className="h-4 w-4" />
@@ -700,7 +755,7 @@ export default function OAuth2ClientManagement() {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="hover:bg-red-50 hover:text-red-600"
+                                                                    className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
                                                                     onClick={() => handleDeleteClient(client)}
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
@@ -711,72 +766,161 @@ export default function OAuth2ClientManagement() {
                                                 ))}
                                             </TableBody>
                                         </Table>
+                                    </div>
 
-                                        {/* Pagination */}
-                                        {totalPages > 1 && (
-                                            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                                                <div className="text-sm text-gray-600">
-                                                    显示 {startIndex} - {endIndex} 条，共 {totalClients} 条记录
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm text-gray-600">跳转到</span>
-                                                        <Input
-                                                            type="number"
-                                                            min="1"
-                                                            max={totalPages}
-                                                            value={jumpToPage}
-                                                            onChange={(e) => setJumpToPage(e.target.value)}
-                                                            className="w-16 h-8 text-center"
-                                                            onKeyPress={(e) => e.key === 'Enter' && handleJumpToPage()}
-                                                        />
-                                                        <span className="text-sm text-gray-600">页</span>
+                                    {/* Mobile Cards */}
+                                    <div className="lg:hidden space-y-4 p-4">
+                                        {clients.map((client) => (
+                                            <Card key={client.id} className="p-4">
+                                                <div className="space-y-4">
+                                                    {/* Client Header */}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                                                            <Settings className="h-6 w-6 text-blue-600" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-medium truncate">{client.clientName}</div>
+                                                            <div className="text-sm text-muted-foreground font-mono truncate">{client.clientId}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Grant Types */}
+                                                    <div className="space-y-2">
+                                                        <div className="text-sm font-medium">授权类型:</div>
+                                                        <div className="flex gap-1 flex-wrap">
+                                                            {client.authorizationGrantTypes?.split(',').map((type, index) => (
+                                                                <Badge key={index} variant="secondary" className="text-xs">
+                                                                    {type.trim()}
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Scopes */}
+                                                    <div className="space-y-2">
+                                                        <div className="text-sm font-medium">权限范围:</div>
+                                                        <div className="flex gap-1 flex-wrap">
+                                                            {client.scopes?.split(',').map((scope, index) => (
+                                                                <Badge key={index} variant="outline" className="text-xs">
+                                                                    {scope.trim()}
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Creation Date */}
+                                                    {client.clientIdIssuedAt && (
+                                                        <div className="text-sm text-muted-foreground">
+                                                            创建时间: {new Date(client.clientIdIssuedAt * 1000).toLocaleDateString()}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Actions */}
+                                                    <div className="space-y-2 pt-2 border-t bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 rounded-lg p-3 -mx-1">
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={handleJumpToPage}
-                                                            disabled={!jumpToPage}
+                                                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-500 hover:border-blue-600 shadow-md hover:shadow-lg transition-all duration-200"
+                                                            onClick={() => handleViewClient(client.id!)}
                                                         >
-                                                            跳转
+                                                            <Eye className="h-4 w-4 mr-2"/>
+                                                            查看
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-500 hover:border-green-600 shadow-md hover:shadow-lg transition-all duration-200"
+                                                            onClick={() => handleEditClient(client.id!)}
+                                                        >
+                                                            <Edit className="h-4 w-4 mr-2"/>
+                                                            编辑
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-red-500 hover:border-red-600 shadow-md hover:shadow-lg transition-all duration-200"
+                                                            onClick={() => handleDeleteClient(client)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-2"/>
+                                                            删除
                                                         </Button>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={handlePreviousPage}
-                                                            disabled={currentPage === 1}
-                                                        >
-                                                            <ChevronLeft className="h-4 w-4" />
-                                                        </Button>
-                                                        <span className="text-sm text-gray-600">
-                                                            {currentPage} / {totalPages}
-                                                        </span>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={handleNextPage}
-                                                            disabled={currentPage === totalPages}
-                                                        >
-                                                            <ChevronRight className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                        </>
-                                    )}
-                                </>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
-                            </CardContent>
-                        </Card>
-                    </div>
-                </SidebarMain>
 
-                <SidebarToggle />
-            </div>
+                            {/* Pagination */}
+                            {!loading && totalClients > pageSize && (
+                                <div className="flex flex-col gap-4 mt-4 pt-4 border-t">
+                                    {/* Pagination info and controls */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm text-muted-foreground">
+                                            第 {currentPage} 页，共 {Math.ceil(totalClients / pageSize)} 页
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={currentPage === 1}
+                                            >
+                                                <ChevronLeft className="h-4 w-4"/>
+                                                上一页
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                                disabled={currentPage >= Math.ceil(totalClients / pageSize)}
+                                            >
+                                                下一页
+                                                <ChevronRight className="h-4 w-4"/>
+                                            </Button>
+                                        </div>
+                                    </div>
 
-            {/* Error Display */}
+                                    {/* Page jumping */}
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span className="text-sm text-muted-foreground">跳转到</span>
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            max={Math.ceil(totalClients / pageSize)}
+                                            value={jumpToPage}
+                                            onChange={(e) => setJumpToPage(e.target.value)}
+                                            onKeyDown={handleJumpInputKeyPress}
+                                            className="w-20 text-center"
+                                            placeholder="页码"
+                                        />
+                                        <span className="text-sm text-muted-foreground">页</span>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleJumpToPage}
+                                            disabled={!jumpToPage || parseInt(jumpToPage) < 1 || parseInt(jumpToPage) > Math.ceil(totalClients / pageSize)}
+                                        >
+                                            跳转
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Stats */}
+                            <div
+                                className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
+                                <div>
+                                    显示 {clients.length} 个客户端，共 {totalClients} 个客户端
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </SidebarMain>
+
+            {/* Logout Error Display */}
             {logoutError && (
                 <div className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
                     <p>{logoutError}</p>
