@@ -1,8 +1,9 @@
 name: deploy-push
 
 on:
-  push:
-    branches: [ "master" ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 0'
 
 jobs:
   build:
