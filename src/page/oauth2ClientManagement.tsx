@@ -53,6 +53,28 @@ import type {
 } from "@/services/oauth2ClientService"
 import { getAdminNavItems, handleAdminNavigation } from "@/lib/adminNavigation"
 
+// OAuth2 Client Authentication Methods Enum
+const CLIENT_AUTH_METHODS = {
+    CLIENT_SECRET_BASIC: 'client_secret_basic',
+    CLIENT_SECRET_POST: 'client_secret_post',
+    CLIENT_SECRET_JWT: 'client_secret_jwt',
+    PRIVATE_KEY_JWT: 'private_key_jwt',
+    NONE: 'none',
+    TLS_CLIENT_AUTH: 'tls_client_auth',
+    SELF_SIGNED_TLS_CLIENT_AUTH: 'self_signed_tls_client_auth'
+} as const
+
+// Client Authentication Methods options for dropdown
+const CLIENT_AUTH_METHOD_OPTIONS = [
+    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_BASIC, label: 'HTTP Basic 头传递 (client_secret_basic)', description: '通过 HTTP Basic 头传递 client_id 和 client_secret' },
+    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_POST, label: 'POST 请求体传递 (client_secret_post)', description: '在 POST 请求体传递 client_id 和 client_secret' },
+    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_JWT, label: '客户端密钥 JWT (client_secret_jwt)', description: '用 client_secret 签发 JWT 认证' },
+    { value: CLIENT_AUTH_METHODS.PRIVATE_KEY_JWT, label: '私钥 JWT (private_key_jwt)', description: '用私钥签发 JWT 进行认证' },
+    { value: CLIENT_AUTH_METHODS.NONE, label: '无认证 (none)', description: '无客户端认证（公开客户端）' },
+    { value: CLIENT_AUTH_METHODS.TLS_CLIENT_AUTH, label: 'TLS 证书认证 (tls_client_auth)', description: '基于 TLS 证书的客户端认证' },
+    { value: CLIENT_AUTH_METHODS.SELF_SIGNED_TLS_CLIENT_AUTH, label: '自签名 TLS 证书认证 (self_signed_tls_client_auth)', description: '基于自签名 TLS 证书的客户端认证' }
+]
+
 interface LogoutResponse {
     code: number
     msg?: string
@@ -71,7 +93,7 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         clientId: client?.clientId || '',
         clientName: client?.clientName || '',
         clientSecret: client?.clientSecret || '',
-        clientAuthenticationMethods: client?.clientAuthenticationMethods || 'client_secret_basic',
+        clientAuthenticationMethods: client?.clientAuthenticationMethods || CLIENT_AUTH_METHODS.CLIENT_SECRET_BASIC,
         authorizationGrantTypes: client?.authorizationGrantTypes || 'authorization_code,refresh_token',
         redirectUris: client?.redirectUris || '',
         postLogoutRedirectUris: client?.postLogoutRedirectUris || '',
@@ -133,11 +155,17 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-2">认证方式</label>
-                            <Input
+                            <select
                                 value={formData.clientAuthenticationMethods}
                                 onChange={(e) => handleChange('clientAuthenticationMethods', e.target.value)}
-                                placeholder="client_secret_basic,client_secret_post"
-                            />
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {CLIENT_AUTH_METHOD_OPTIONS.map(option => (
+                                    <option key={option.value} value={option.value} title={option.description}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">授权类型</label>
@@ -281,7 +309,7 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                         <div>
                             <label className="block text-sm font-medium text-gray-600 mb-1">创建时间</label>
                             <p className="text-sm bg-gray-50 p-2 rounded">
-                                {new Date(client.clientIdIssuedAt * 1000).toLocaleString()}
+                                {new Date(client.clientIdIssuedAt).toLocaleString()}
                             </p>
                         </div>
                     )}
@@ -365,21 +393,19 @@ export default function OAuth2ClientManagement() {
         }
     }, [currentPage, pageSize])
 
-    // Debounced search effect
+    // Load clients when page/size changes or search term changes (with debounce for search)
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            loadClients(searchTerm || undefined)
-        }, 300) // 300ms debounce
-
-        return () => clearTimeout(timeoutId)
-    }, [searchTerm, loadClients])
-
-    // Load clients on component mount and when page changes (not for search - that's handled by debounced effect)
-    useEffect(() => {
-        if (!searchTerm) { // Only load when not searching, search is handled by debounced effect
+        if (searchTerm) {
+            // Debounced search
+            const timeoutId = setTimeout(() => {
+                loadClients(searchTerm)
+            }, 300) // 300ms debounce
+            return () => clearTimeout(timeoutId)
+        } else {
+            // Immediate load for pagination or initial load
             loadClients()
         }
-    }, [currentPage, pageSize, loadClients]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [searchTerm, currentPage, pageSize, loadClients])
 
     // Pagination calculations
     const totalPages = Math.ceil(totalClients / pageSize)
@@ -720,7 +746,7 @@ export default function OAuth2ClientManagement() {
                                                         </TableCell>
                                                         <TableCell>
                                                             {client.clientIdIssuedAt ?
-                                                                new Date(client.clientIdIssuedAt * 1000).toLocaleDateString() :
+                                                                new Date(client.clientIdIssuedAt).toLocaleDateString() :
                                                                 '未知'
                                                             }
                                                         </TableCell>
@@ -801,7 +827,7 @@ export default function OAuth2ClientManagement() {
                                                     {/* Creation Date */}
                                                     {client.clientIdIssuedAt && (
                                                         <div className="text-sm text-muted-foreground">
-                                                            创建时间: {new Date(client.clientIdIssuedAt * 1000).toLocaleDateString()}
+                                                            创建时间: {new Date(client.clientIdIssuedAt).toLocaleDateString()}
                                                         </div>
                                                     )}
 
