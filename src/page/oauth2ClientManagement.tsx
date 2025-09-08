@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/sidebar"
 import {Badge} from "@/components/ui/badge"
 import {Separator} from "@/components/ui/separator"
+import {Checkbox} from "@/components/ui/checkbox"
 import {
     getAllOAuth2Clients,
     createOAuth2Client,
@@ -64,15 +65,48 @@ const CLIENT_AUTH_METHODS = {
     SELF_SIGNED_TLS_CLIENT_AUTH: 'self_signed_tls_client_auth'
 } as const
 
-// Client Authentication Methods options for dropdown
+// Client Authentication Methods options for checkboxes
 const CLIENT_AUTH_METHOD_OPTIONS = [
-    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_BASIC, label: 'HTTP Basic 头传递 (client_secret_basic)', description: '通过 HTTP Basic 头传递 client_id 和 client_secret' },
-    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_POST, label: 'POST 请求体传递 (client_secret_post)', description: '在 POST 请求体传递 client_id 和 client_secret' },
-    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_JWT, label: '客户端密钥 JWT (client_secret_jwt)', description: '用 client_secret 签发 JWT 认证' },
-    { value: CLIENT_AUTH_METHODS.PRIVATE_KEY_JWT, label: '私钥 JWT (private_key_jwt)', description: '用私钥签发 JWT 进行认证' },
-    { value: CLIENT_AUTH_METHODS.NONE, label: '无认证 (none)', description: '无客户端认证（公开客户端）' },
-    { value: CLIENT_AUTH_METHODS.TLS_CLIENT_AUTH, label: 'TLS 证书认证 (tls_client_auth)', description: '基于 TLS 证书的客户端认证' },
-    { value: CLIENT_AUTH_METHODS.SELF_SIGNED_TLS_CLIENT_AUTH, label: '自签名 TLS 证书认证 (self_signed_tls_client_auth)', description: '基于自签名 TLS 证书的客户端认证' }
+    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_BASIC, label: 'HTTP Basic 头传递', subLabel: 'client_secret_basic', description: '通过 HTTP Basic 头传递 client_id 和 client_secret' },
+    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_POST, label: 'POST 请求体传递', subLabel: 'client_secret_post', description: '在 POST 请求体传递 client_id 和 client_secret' },
+    { value: CLIENT_AUTH_METHODS.CLIENT_SECRET_JWT, label: '客户端密钥 JWT', subLabel: 'client_secret_jwt', description: '用 client_secret 签发 JWT 认证' },
+    { value: CLIENT_AUTH_METHODS.PRIVATE_KEY_JWT, label: '私钥 JWT', subLabel: 'private_key_jwt', description: '用私钥签发 JWT 进行认证' },
+    { value: CLIENT_AUTH_METHODS.NONE, label: '无认证', subLabel: 'none', description: '无客户端认证（公开客户端）' },
+    { value: CLIENT_AUTH_METHODS.TLS_CLIENT_AUTH, label: 'TLS 证书认证', subLabel: 'tls_client_auth', description: '基于 TLS 证书的客户端认证' },
+    { value: CLIENT_AUTH_METHODS.SELF_SIGNED_TLS_CLIENT_AUTH, label: '自签名 TLS 证书认证', subLabel: 'self_signed_tls_client_auth', description: '基于自签名 TLS 证书的客户端认证' }
+]
+
+// OAuth2 Grant Types Enum
+const GRANT_TYPES = {
+    AUTHORIZATION_CODE: 'authorization_code',
+    REFRESH_TOKEN: 'refresh_token',
+    CLIENT_CREDENTIALS: 'client_credentials',
+    JWT_BEARER: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+    DEVICE_CODE: 'urn:ietf:params:oauth:grant-type:device_code',
+    TOKEN_EXCHANGE: 'urn:ietf:params:oauth:grant-type:token-exchange'
+} as const
+
+// Grant Types options for checkboxes
+const GRANT_TYPE_OPTIONS = [
+    { value: GRANT_TYPES.AUTHORIZATION_CODE, label: '授权码模式', subLabel: 'authorization_code', description: '授权码模式（推荐，最常用）' },
+    { value: GRANT_TYPES.REFRESH_TOKEN, label: '刷新令牌', subLabel: 'refresh_token', description: '刷新令牌' },
+    { value: GRANT_TYPES.CLIENT_CREDENTIALS, label: '客户端凭证模式', subLabel: 'client_credentials', description: '客户端凭证模式' },
+    { value: GRANT_TYPES.JWT_BEARER, label: 'JWT断言授权', subLabel: 'jwt-bearer', description: 'JWT断言授权' },
+    { value: GRANT_TYPES.DEVICE_CODE, label: '设备码授权', subLabel: 'device_code', description: '设备码授权' },
+    { value: GRANT_TYPES.TOKEN_EXCHANGE, label: '令牌交换', subLabel: 'token-exchange', description: '令牌交换' }
+]
+
+// Common scopes options
+const SCOPE_OPTIONS = [
+    { value: 'openid', label: 'OpenID Connect', description: '基础身份验证信息' },
+    { value: 'profile', label: '用户基本信息', description: '用户的基本档案信息' },
+    { value: 'email', label: '邮箱地址', description: '用户的邮箱地址' },
+    { value: 'address', label: '地址信息', description: '用户的地址信息' },
+    { value: 'phone', label: '电话号码', description: '用户的电话号码' },
+    { value: 'read', label: '读取权限', description: '读取数据的权限' },
+    { value: 'write', label: '写入权限', description: '写入数据的权限' },
+    { value: 'message.read', label: '消息读取', description: '读取消息的权限' },
+    { value: 'message.write', label: '消息写入', description: '写入消息的权限' }
 ]
 
 interface LogoutResponse {
@@ -89,39 +123,74 @@ interface OAuth2ClientFormProps {
 }
 
 function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2ClientFormProps) {
+    const isEditMode = !!client
     const [formData, setFormData] = useState({
         clientId: client?.clientId || '',
         clientName: client?.clientName || '',
         clientSecret: client?.clientSecret || '',
-        clientAuthenticationMethods: client?.clientAuthenticationMethods || CLIENT_AUTH_METHODS.CLIENT_SECRET_BASIC,
-        authorizationGrantTypes: client?.authorizationGrantTypes || 'authorization_code,refresh_token',
+        clientAuthenticationMethods: client?.clientAuthenticationMethods?.split(',').map(m => m.trim()) || [CLIENT_AUTH_METHODS.CLIENT_SECRET_BASIC],
+        authorizationGrantTypes: client?.authorizationGrantTypes?.split(',').map(t => t.trim()) || [GRANT_TYPES.AUTHORIZATION_CODE, GRANT_TYPES.REFRESH_TOKEN],
         redirectUris: client?.redirectUris || '',
         postLogoutRedirectUris: client?.postLogoutRedirectUris || '',
-        scopes: client?.scopes || 'read,write',
+        scopes: client?.scopes?.split(',').map(s => s.trim()) || ['read', 'write'],
         clientSettings: client?.clientSettings || '{}',
         tokenSettings: client?.tokenSettings || '{}'
     })
 
-    const handleChange = (field: string, value: string) => {
+    const handleChange = (field: string, value: string | string[]) => {
         setFormData(prev => ({ ...prev, [field]: value }))
+    }
+
+    const handleAuthMethodToggle = (method: string) => {
+        setFormData(prev => ({
+            ...prev,
+            clientAuthenticationMethods: prev.clientAuthenticationMethods.includes(method)
+                ? prev.clientAuthenticationMethods.filter(m => m !== method)
+                : [...prev.clientAuthenticationMethods, method]
+        }))
+    }
+
+    const handleGrantTypeToggle = (grantType: string) => {
+        setFormData(prev => ({
+            ...prev,
+            authorizationGrantTypes: prev.authorizationGrantTypes.includes(grantType)
+                ? prev.authorizationGrantTypes.filter(t => t !== grantType)
+                : [...prev.authorizationGrantTypes, grantType]
+        }))
+    }
+
+    const handleScopeToggle = (scope: string) => {
+        setFormData(prev => ({
+            ...prev,
+            scopes: prev.scopes.includes(scope)
+                ? prev.scopes.filter(s => s !== scope)
+                : [...prev.scopes, scope]
+        }))
     }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        const submitData = {
+            ...formData,
+            clientAuthenticationMethods: formData.clientAuthenticationMethods.join(','),
+            authorizationGrantTypes: formData.authorizationGrantTypes.join(','),
+            scopes: formData.scopes.join(',')
+        }
+        
         if (client?.id) {
-            onSubmit({ ...formData, id: client.id } as UpdateOAuth2ClientRequest)
+            onSubmit({ ...submitData, id: client.id } as UpdateOAuth2ClientRequest)
         } else {
-            onSubmit(formData as CreateOAuth2ClientRequest)
+            onSubmit(submitData as CreateOAuth2ClientRequest)
         }
     }
 
     return (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200">
                 <h3 className="text-lg font-semibold mb-4">
                     {client ? '编辑 OAuth2 客户端' : '创建 OAuth2 客户端'}
                 </h3>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-2">客户端 ID *</label>
@@ -142,38 +211,60 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                         </div>
                     </div>
 
+                    {/* Client Secret - only visible during creation */}
+                    {!isEditMode && (
+                        <div>
+                            <label className="block text-sm font-medium mb-2">客户端密钥 *</label>
+                            <Input
+                                type="password"
+                                value={formData.clientSecret}
+                                onChange={(e) => handleChange('clientSecret', e.target.value)}
+                                required
+                                placeholder="客户端密钥只在创建时可见，请妥善保存"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">⚠️ 客户端密钥仅在创建时显示，请妥善保存</p>
+                        </div>
+                    )}
+
+                    {/* Authentication Methods */}
                     <div>
-                        <label className="block text-sm font-medium mb-2">客户端密钥 *</label>
-                        <Input
-                            type="password"
-                            value={formData.clientSecret}
-                            onChange={(e) => handleChange('clientSecret', e.target.value)}
-                            required
-                        />
+                        <label className="block text-sm font-medium mb-3">认证方式 *</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {CLIENT_AUTH_METHOD_OPTIONS.map(option => (
+                                <Checkbox
+                                    key={option.value}
+                                    id={`auth-${option.value}`}
+                                    checked={formData.clientAuthenticationMethods.includes(option.value)}
+                                    onChange={() => handleAuthMethodToggle(option.value)}
+                                >
+                                    <div>
+                                        <div className="font-medium text-sm">{option.label}</div>
+                                        <div className="text-xs text-gray-500 font-mono">{option.subLabel}</div>
+                                        <div className="text-xs text-gray-400 mt-1">{option.description}</div>
+                                    </div>
+                                </Checkbox>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">认证方式</label>
-                            <select
-                                value={formData.clientAuthenticationMethods}
-                                onChange={(e) => handleChange('clientAuthenticationMethods', e.target.value)}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                {CLIENT_AUTH_METHOD_OPTIONS.map(option => (
-                                    <option key={option.value} value={option.value} title={option.description}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">授权类型</label>
-                            <Input
-                                value={formData.authorizationGrantTypes}
-                                onChange={(e) => handleChange('authorizationGrantTypes', e.target.value)}
-                                placeholder="authorization_code,refresh_token"
-                            />
+                    {/* Grant Types */}
+                    <div>
+                        <label className="block text-sm font-medium mb-3">授权类型 *</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {GRANT_TYPE_OPTIONS.map(option => (
+                                <Checkbox
+                                    key={option.value}
+                                    id={`grant-${option.value}`}
+                                    checked={formData.authorizationGrantTypes.includes(option.value)}
+                                    onChange={() => handleGrantTypeToggle(option.value)}
+                                >
+                                    <div>
+                                        <div className="font-medium text-sm">{option.label}</div>
+                                        <div className="text-xs text-gray-500 font-mono">{option.subLabel}</div>
+                                        <div className="text-xs text-gray-400 mt-1">{option.description}</div>
+                                    </div>
+                                </Checkbox>
+                            ))}
                         </div>
                     </div>
 
@@ -195,13 +286,25 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                         />
                     </div>
 
+                    {/* Scopes */}
                     <div>
-                        <label className="block text-sm font-medium mb-2">权限范围</label>
-                        <Input
-                            value={formData.scopes}
-                            onChange={(e) => handleChange('scopes', e.target.value)}
-                            placeholder="read,write,openid"
-                        />
+                        <label className="block text-sm font-medium mb-3">权限范围 *</label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {SCOPE_OPTIONS.map(option => (
+                                <Checkbox
+                                    key={option.value}
+                                    id={`scope-${option.value}`}
+                                    checked={formData.scopes.includes(option.value)}
+                                    onChange={() => handleScopeToggle(option.value)}
+                                >
+                                    <div>
+                                        <div className="font-medium text-sm">{option.label}</div>
+                                        <div className="text-xs text-gray-500 font-mono">{option.value}</div>
+                                        <div className="text-xs text-gray-400 mt-1">{option.description}</div>
+                                    </div>
+                                </Checkbox>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -273,6 +376,14 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                         </div>
                     </div>
 
+                    {/* Client Secret - Hidden for security */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">客户端密钥</label>
+                        <p className="text-sm bg-gray-50 p-2 rounded text-gray-500 italic">
+                            🔒 出于安全考虑，客户端密钥已隐藏
+                        </p>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">认证方式</label>
                         <div className="flex gap-1 flex-wrap">
@@ -294,6 +405,11 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                     <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">重定向 URI</label>
                         <p className="text-sm bg-gray-50 p-2 rounded break-all">{client.redirectUris || '未设置'}</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">登出重定向 URI</label>
+                        <p className="text-sm bg-gray-50 p-2 rounded break-all">{client.postLogoutRedirectUris || '未设置'}</p>
                     </div>
 
                     <div>
