@@ -98,15 +98,11 @@ const GRANT_TYPE_OPTIONS = [
 
 // Common scopes options for quick selection
 const COMMON_SCOPES = [
-    { value: 'openid', label: 'OpenID Connect', description: '基础身份验证信息' },
-    { value: 'profile', label: '用户基本信息', description: '用户的基本档案信息' },
-    { value: 'email', label: '邮箱地址', description: '用户的邮箱地址' },
-    { value: 'address', label: '地址信息', description: '用户的地址信息' },
-    { value: 'phone', label: '电话号码', description: '用户的电话号码' },
-    { value: 'read', label: '读取权限', description: '读取数据的权限' },
-    { value: 'write', label: '写入权限', description: '写入数据的权限' },
-    { value: 'message.read', label: '消息读取', description: '读取消息的权限' },
-    { value: 'message.write', label: '消息写入', description: '写入消息的权限' }
+    { value: 'openid', label: 'OpenID Connect', description: '用于 OpenID Connect，标识要获取用户身份信息' },
+    { value: 'profile', label: '用户基础公开信息', description: '用户的基础公开信息（如昵称、头像等）' },
+    { value: 'email', label: '邮箱地址', description: '获取用户邮箱地址' },
+    { value: 'address', label: '地址信息', description: '获取用户的地址信息' },
+    { value: 'phone', label: '电话号码', description: '获取用户的电话号码' }
 ]
 
 interface LogoutResponse {
