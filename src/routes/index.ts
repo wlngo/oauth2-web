@@ -11,10 +11,11 @@ import {permissionManagementRoute} from './permissionManagement'
 import {oauth2ClientManagementRoute} from './oauth2ClientManagement'
 import {oauth2ClientDemoRoute} from './oauth2ClientDemo'
 import {rootRoute} from './router'
-import {createRouter, createHashHistory} from '@tanstack/react-router'
+import {createRouter, createHashHistory,createBrowserHistory} from '@tanstack/react-router'
 
 const basepath = import.meta.env.VITE_BASE_PATH || ''
-
+const useHash = import.meta.env.VITE_ROUTER_HASH !== 'false' // 默认为true
+const history = useHash ? createHashHistory() : createBrowserHistory()
 export const routeTree = rootRoute.addChildren([
     homeRoute,
     loginRoute,
@@ -32,6 +33,6 @@ export const routeTree = rootRoute.addChildren([
 
 export const router = createRouter({
     routeTree,
-    history: createHashHistory(), // ✅ 开启 Hash 模式
+    history: history, // ✅ 开启 Hash 模式
     basepath,
 })
