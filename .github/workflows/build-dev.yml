@@ -29,6 +29,7 @@ jobs:
         working-directory: oauth2-web
       - run: | 
           export VITE_ROUTER_HASH=false
+          export VITE_BASE_PATH=/oauth2-web
           npm run build --if-present
         working-directory: oauth2-web
       # 4. upload artifact
