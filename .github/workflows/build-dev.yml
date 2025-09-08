@@ -1,4 +1,4 @@
-name: build-dev
+name: deploy-to-dev
 
 on:
   push:
@@ -35,3 +35,18 @@ jobs:
         with:
           name: oauth2-web-dist
           path: oauth2-web/dist/
+  deploy:
+    runs-on: [self-hosted, linux]  # 用你的自有 runner 标签
+    steps:
+      # 1. download artifact
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: oauth2-web-dist
+          path: dist
+
+      # 2. Copy to nginx html directory
+      - name: Copy to nginx html directory
+        run: |
+          sudo rm -rf /opt/webserver/oauth2-web/www/*
+          sudo cp -r dist/* /opt/webserver/oauth2-web/www/
