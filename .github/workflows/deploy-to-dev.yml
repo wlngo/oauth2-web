@@ -2,7 +2,7 @@ name: deploy-to-nginx
 
 on:
   workflow_run:
-    workflows: ["deploy-push"]
+    workflows: ["build-dev"]
     types:
       - completed
 
