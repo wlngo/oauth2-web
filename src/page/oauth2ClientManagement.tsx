@@ -94,8 +94,8 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
     }
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
                 <h3 className="text-lg font-semibold mb-4">
                     {client ? '编辑 OAuth2 客户端' : '创建 OAuth2 客户端'}
                 </h3>
@@ -218,8 +218,8 @@ interface OAuth2ClientDetailModalProps {
 
 function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetailModalProps) {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">OAuth2 客户端详情</h3>
                     <div className="flex gap-2">
@@ -301,8 +301,8 @@ interface DeleteConfirmationModalProps {
 
 function DeleteConfirmationModal({ client, onConfirm, onCancel, isLoading }: DeleteConfirmationModalProps) {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md border border-gray-200">
                 <h3 className="text-lg font-semibold mb-4">确认删除</h3>
                 <p className="text-gray-600 mb-6">
                     确定要删除客户端 "{client.clientName}" ({client.clientId}) 吗？此操作无法撤销。
@@ -719,8 +719,8 @@ export default function OAuth2ClientManagement() {
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
-                                                            {client.clientIdIssuedAt ? 
-                                                                new Date(client.clientIdIssuedAt * 1000).toLocaleDateString() : 
+                                                            {client.clientIdIssuedAt ?
+                                                                new Date(client.clientIdIssuedAt * 1000).toLocaleDateString() :
                                                                 '未知'
                                                             }
                                                         </TableCell>
@@ -914,7 +914,7 @@ export default function OAuth2ClientManagement() {
             {logoutError && (
                 <div className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
                     <p>{logoutError}</p>
-                    <button 
+                    <button
                         onClick={() => setLogoutError("")}
                         className="ml-2 text-red-500 hover:text-red-700"
                     >
