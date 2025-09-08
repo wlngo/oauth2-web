@@ -96,8 +96,8 @@ const GRANT_TYPE_OPTIONS = [
     { value: GRANT_TYPES.TOKEN_EXCHANGE, label: '令牌交换', subLabel: 'token-exchange', description: '令牌交换' }
 ]
 
-// Common scopes options
-const SCOPE_OPTIONS = [
+// Common scopes options for quick selection
+const COMMON_SCOPES = [
     { value: 'openid', label: 'OpenID Connect', description: '基础身份验证信息' },
     { value: 'profile', label: '用户基本信息', description: '用户的基本档案信息' },
     { value: 'email', label: '邮箱地址', description: '用户的邮箱地址' },
@@ -136,6 +136,9 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         clientSettings: client?.clientSettings || '{}',
         tokenSettings: client?.tokenSettings || '{}'
     })
+    
+    // Add state for scope input field
+    const [scopeInput, setScopeInput] = useState('')
 
     const handleChange = (field: string, value: string | string[]) => {
         setFormData(prev => ({ ...prev, [field]: value }))
@@ -166,6 +169,30 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                 ? prev.scopes.filter(s => s !== scope)
                 : [...prev.scopes, scope]
         }))
+    }
+
+    const handleAddScope = () => {
+        if (scopeInput.trim() && !formData.scopes.includes(scopeInput.trim())) {
+            setFormData(prev => ({
+                ...prev,
+                scopes: [...prev.scopes, scopeInput.trim()]
+            }))
+            setScopeInput('')
+        }
+    }
+
+    const handleRemoveScope = (scope: string) => {
+        setFormData(prev => ({
+            ...prev,
+            scopes: prev.scopes.filter(s => s !== scope)
+        }))
+    }
+
+    const handleScopeInputKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            handleAddScope()
+        }
     }
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -289,21 +316,67 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                     {/* Scopes */}
                     <div>
                         <label className="block text-sm font-medium mb-3">权限范围 *</label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {SCOPE_OPTIONS.map(option => (
-                                <Checkbox
-                                    key={option.value}
-                                    id={`scope-${option.value}`}
-                                    checked={formData.scopes.includes(option.value)}
-                                    onChange={() => handleScopeToggle(option.value)}
+                        
+                        {/* Current selected scopes */}
+                        {formData.scopes.length > 0 && (
+                            <div className="mb-3">
+                                <div className="text-sm text-gray-600 mb-2">已选择的权限范围:</div>
+                                <div className="flex gap-2 flex-wrap">
+                                    {formData.scopes.map((scope) => (
+                                        <Badge
+                                            key={scope}
+                                            variant="outline"
+                                            className="text-xs px-2 py-1 cursor-pointer hover:bg-red-50 hover:border-red-300"
+                                            onClick={() => handleRemoveScope(scope)}
+                                        >
+                                            {scope}
+                                            <span className="ml-1 text-red-500">×</span>
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Add custom scope */}
+                        <div className="space-y-3">
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="输入自定义权限范围 (例如: custom.read, api.access)"
+                                    value={scopeInput}
+                                    onChange={(e) => setScopeInput(e.target.value)}
+                                    onKeyPress={handleScopeInputKeyPress}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    onClick={handleAddScope}
+                                    disabled={!scopeInput.trim() || formData.scopes.includes(scopeInput.trim())}
+                                    size="sm"
+                                    variant="outline"
                                 >
-                                    <div>
-                                        <div className="font-medium text-sm">{option.label}</div>
-                                        <div className="text-xs text-gray-500 font-mono">{option.value}</div>
-                                        <div className="text-xs text-gray-400 mt-1">{option.description}</div>
-                                    </div>
-                                </Checkbox>
-                            ))}
+                                    添加
+                                </Button>
+                            </div>
+                            
+                            {/* Quick select common scopes */}
+                            <div>
+                                <div className="text-sm text-gray-600 mb-2">常用权限范围:</div>
+                                <div className="flex gap-2 flex-wrap">
+                                    {COMMON_SCOPES.map(option => (
+                                        <Button
+                                            key={option.value}
+                                            type="button"
+                                            size="sm"
+                                            variant={formData.scopes.includes(option.value) ? "default" : "outline"}
+                                            onClick={() => handleScopeToggle(option.value)}
+                                            className="text-xs"
+                                            disabled={formData.scopes.includes(option.value)}
+                                        >
+                                            {option.label}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -414,11 +487,23 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
 
                     <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">权限范围</label>
-                        <div className="flex gap-1 flex-wrap">
+                        <div className="flex gap-1 flex-wrap max-h-20 overflow-y-auto">
                             {client.scopes?.split(',').map((scope, index) => (
-                                <Badge key={index} variant="outline">{scope.trim()}</Badge>
+                                <Badge 
+                                    key={index} 
+                                    variant="outline"
+                                    className="text-xs"
+                                    title={scope.trim()}
+                                >
+                                    {scope.trim()}
+                                </Badge>
                             ))}
                         </div>
+                        {(client.scopes?.split(',').length || 0) > 6 && (
+                            <div className="text-xs text-gray-500 mt-1">
+                                共 {client.scopes?.split(',').length} 个权限范围
+                            </div>
+                        )}
                     </div>
 
                     {client.clientIdIssuedAt && (
@@ -847,14 +932,23 @@ export default function OAuth2ClientManagement() {
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
-                                                            <div className="flex gap-1 flex-wrap">
+                                                            <div className="flex gap-1 flex-wrap max-w-48">
                                                                 {client.scopes?.split(',').slice(0, 3).map((scope, index) => (
-                                                                    <Badge key={index} variant="outline" className="text-xs">
+                                                                    <Badge 
+                                                                        key={index} 
+                                                                        variant="outline" 
+                                                                        className="text-xs"
+                                                                        title={scope.trim()}
+                                                                    >
                                                                         {scope.trim()}
                                                                     </Badge>
                                                                 ))}
                                                                 {(client.scopes?.split(',').length || 0) > 3 && (
-                                                                    <Badge variant="outline" className="text-xs">
+                                                                    <Badge 
+                                                                        variant="outline" 
+                                                                        className="text-xs cursor-help"
+                                                                        title={`其他权限范围: ${client.scopes?.split(',').slice(3).map(s => s.trim()).join(', ')}`}
+                                                                    >
                                                                         +{(client.scopes?.split(',').length || 0) - 3}
                                                                     </Badge>
                                                                 )}
