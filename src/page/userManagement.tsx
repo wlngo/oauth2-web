@@ -111,21 +111,19 @@ export default function UserManagement() {
         }
     }, [currentPage, pageSize])
 
-    // Debounced search effect
+    // Load users when page/size changes or search term changes (with debounce for search)
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            loadUsers(searchTerm || undefined)
-        }, 300) // 300ms debounce
-
-        return () => clearTimeout(timeoutId)
-    }, [searchTerm, loadUsers])
-
-    // Load users on component mount and when page changes (not for search - that's handled by debounced effect)
-    useEffect(() => {
-        if (!searchTerm) { // Only load when not searching, search is handled by debounced effect
+        if (searchTerm) {
+            // Debounced search
+            const timeoutId = setTimeout(() => {
+                loadUsers(searchTerm)
+            }, 300) // 300ms debounce
+            return () => clearTimeout(timeoutId)
+        } else {
+            // Immediate load for pagination or initial load
             loadUsers()
         }
-    }, [currentPage, pageSize, loadUsers]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [searchTerm, currentPage, pageSize, loadUsers])
 
     const handleNavigation = (id: string) => {
         setActiveItem(id)
