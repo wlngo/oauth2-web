@@ -40,6 +40,7 @@ import {
 import {Badge} from "@/components/ui/badge"
 import {Separator} from "@/components/ui/separator"
 import {Checkbox} from "@/components/ui/checkbox"
+import {MultipleUriInput} from "@/components/MultipleUriInput"
 import {
     getAllOAuth2Clients,
     createOAuth2Client,
@@ -126,8 +127,8 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         clientSecret: client?.clientSecret || '',
         clientAuthenticationMethods: client?.clientAuthenticationMethods?.split(',').map(m => m.trim()) || [CLIENT_AUTH_METHODS.CLIENT_SECRET_BASIC],
         authorizationGrantTypes: client?.authorizationGrantTypes?.split(',').map(t => t.trim()) || [GRANT_TYPES.AUTHORIZATION_CODE, GRANT_TYPES.REFRESH_TOKEN],
-        redirectUris: client?.redirectUris || '',
-        postLogoutRedirectUris: client?.postLogoutRedirectUris || '',
+        redirectUris: client?.redirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
+        postLogoutRedirectUris: client?.postLogoutRedirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
         scopes: client?.scopes?.split(',').map(s => s.trim()) || ['read', 'write'],
         clientSettings: client?.clientSettings || '{}',
         tokenSettings: client?.tokenSettings || '{}'
@@ -197,6 +198,8 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
             ...formData,
             clientAuthenticationMethods: formData.clientAuthenticationMethods.join(','),
             authorizationGrantTypes: formData.authorizationGrantTypes.join(','),
+            redirectUris: formData.redirectUris.join(','),
+            postLogoutRedirectUris: formData.postLogoutRedirectUris.join(','),
             scopes: formData.scopes.join(',')
         }
         
@@ -291,23 +294,19 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-2">重定向 URI</label>
-                        <Input
-                            value={formData.redirectUris}
-                            onChange={(e) => handleChange('redirectUris', e.target.value)}
-                            placeholder="http://localhost:8080/callback"
-                        />
-                    </div>
+                    <MultipleUriInput
+                        label="重定向 URI"
+                        value={formData.redirectUris}
+                        onChange={(uris) => handleChange('redirectUris', uris)}
+                        placeholder="http://localhost:8080/callback"
+                    />
 
-                    <div>
-                        <label className="block text-sm font-medium mb-2">登出重定向 URI</label>
-                        <Input
-                            value={formData.postLogoutRedirectUris}
-                            onChange={(e) => handleChange('postLogoutRedirectUris', e.target.value)}
-                            placeholder="http://localhost:8080/logout"
-                        />
-                    </div>
+                    <MultipleUriInput
+                        label="登出重定向 URI"
+                        value={formData.postLogoutRedirectUris}
+                        onChange={(uris) => handleChange('postLogoutRedirectUris', uris)}
+                        placeholder="http://localhost:8080/logout"
+                    />
 
                     {/* Scopes */}
                     <div>
@@ -473,12 +472,42 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
 
                     <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">重定向 URI</label>
-                        <p className="text-sm bg-gray-50 p-2 rounded break-all">{client.redirectUris || '未设置'}</p>
+                        {client.redirectUris && client.redirectUris.trim() ? (
+                            <div className="flex gap-1 flex-wrap max-h-20 overflow-y-auto">
+                                {client.redirectUris.split(',').map((uri, index) => (
+                                    <Badge 
+                                        key={index} 
+                                        variant="outline"
+                                        className="text-xs break-all"
+                                        title={uri.trim()}
+                                    >
+                                        {uri.trim()}
+                                    </Badge>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm bg-gray-50 p-2 rounded text-gray-500">未设置</p>
+                        )}
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">登出重定向 URI</label>
-                        <p className="text-sm bg-gray-50 p-2 rounded break-all">{client.postLogoutRedirectUris || '未设置'}</p>
+                        {client.postLogoutRedirectUris && client.postLogoutRedirectUris.trim() ? (
+                            <div className="flex gap-1 flex-wrap max-h-20 overflow-y-auto">
+                                {client.postLogoutRedirectUris.split(',').map((uri, index) => (
+                                    <Badge 
+                                        key={index} 
+                                        variant="outline"
+                                        className="text-xs break-all"
+                                        title={uri.trim()}
+                                    >
+                                        {uri.trim()}
+                                    </Badge>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm bg-gray-50 p-2 rounded text-gray-500">未设置</p>
+                        )}
                     </div>
 
                     <div>
