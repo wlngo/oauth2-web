@@ -36,6 +36,7 @@ jobs:
           name: oauth2-web-dist
           path: oauth2-web/dist/
   deploy:
+    needs: build
     runs-on: [self-hosted, linux]  # 用你的自有 runner 标签
     steps:
       # 1. download artifact
