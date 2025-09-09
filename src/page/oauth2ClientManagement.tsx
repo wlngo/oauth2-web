@@ -591,7 +591,12 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">OAuth2 客户端详情</h3>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => onEdit(client)}>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-500 hover:border-green-600 shadow-md hover:shadow-lg transition-all duration-200"
+                            onClick={() => onEdit(client)}
+                        >
                             <Edit className="h-4 w-4 mr-2" />
                             编辑
                         </Button>
@@ -1223,9 +1228,9 @@ export default function OAuth2ClientManagement() {
                                                                     <Eye className="h-4 w-4" />
                                                                 </Button>
                                                                 <Button
-                                                                    variant="ghost"
+                                                                    variant="outline"
                                                                     size="sm"
-                                                                    className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950 dark:hover:text-green-400"
+                                                                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-500 hover:border-green-600 shadow-md hover:shadow-lg transition-all duration-200"
                                                                     onClick={() => handleEditClient(client.id!)}
                                                                 >
                                                                     <Edit className="h-4 w-4" />

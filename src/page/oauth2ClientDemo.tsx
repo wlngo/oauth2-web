@@ -153,9 +153,9 @@ export default function OAuth2ClientManagementDemo() {
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                                 <Button
-                                                    variant="ghost"
+                                                    variant="outline"
                                                     size="sm"
-                                                    className="hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-950 dark:hover:text-green-400"
+                                                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-500 hover:border-green-600 shadow-md hover:shadow-lg transition-all duration-200"
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
