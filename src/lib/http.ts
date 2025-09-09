@@ -138,7 +138,7 @@ export async function multipartRequest<T>(
 
 export async function getRequest<T>(
     url: string,
-    params?: Record<string, T>,
+    params?: Record<string, string | number | boolean>,
     options: RequestOptions = {}
 ): Promise<T> {
     const headers: Record<string, string> = {

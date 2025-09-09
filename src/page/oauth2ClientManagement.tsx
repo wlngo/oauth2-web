@@ -40,7 +40,7 @@ import {
 import {Badge} from "@/components/ui/badge"
 import {Separator} from "@/components/ui/separator"
 import {Checkbox} from "@/components/ui/checkbox"
-import {MultipleUriInput} from "@/components/MultipleUriInput"
+import {UnifiedInputComponent} from "@/components/UnifiedInputComponent"
 import {
     getAllOAuth2Clients,
     createOAuth2Client,
@@ -106,6 +106,24 @@ const COMMON_SCOPES = [
     { value: 'phone', label: '电话号码', description: '获取用户的电话号码' }
 ]
 
+// Common redirect URI templates for quick selection
+const COMMON_REDIRECT_URIS = [
+    { value: 'http://localhost:3000/callback', label: 'localhost:3000', description: '开发环境回调地址 (React/Vue 默认端口)' },
+    { value: 'http://localhost:8080/callback', label: 'localhost:8080', description: '开发环境回调地址 (Spring Boot 默认端口)' },
+    { value: 'http://localhost:8081/callback', label: 'localhost:8081', description: '开发环境回调地址 (备用端口)' },
+    { value: 'https://example.com/oauth/callback', label: '生产回调', description: '生产环境OAuth回调地址模板' },
+    { value: 'https://example.com/auth/callback', label: '认证回调', description: '生产环境认证回调地址模板' }
+]
+
+// Common logout redirect URI templates for quick selection  
+const COMMON_LOGOUT_REDIRECT_URIS = [
+    { value: 'http://localhost:3000/', label: 'localhost:3000', description: '开发环境首页 (React/Vue 默认端口)' },
+    { value: 'http://localhost:8080/', label: 'localhost:8080', description: '开发环境首页 (Spring Boot 默认端口)' },
+    { value: 'http://localhost:8081/', label: 'localhost:8081', description: '开发环境首页 (备用端口)' },
+    { value: 'https://example.com/', label: '生产首页', description: '生产环境首页模板' },
+    { value: 'https://example.com/login', label: '登录页', description: '生产环境登录页模板' }
+]
+
 interface LogoutResponse {
     code: number
     msg?: string
@@ -133,9 +151,6 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         clientSettings: client?.clientSettings || '{}',
         tokenSettings: client?.tokenSettings || '{}'
     })
-    
-    // Add state for scope input field
-    const [scopeInput, setScopeInput] = useState('')
 
     const handleChange = (field: string, value: string | string[]) => {
         setFormData(prev => ({ ...prev, [field]: value }))
@@ -157,39 +172,6 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                 ? prev.authorizationGrantTypes.filter(t => t !== grantType)
                 : [...prev.authorizationGrantTypes, grantType]
         }))
-    }
-
-    const handleScopeToggle = (scope: string) => {
-        setFormData(prev => ({
-            ...prev,
-            scopes: prev.scopes.includes(scope)
-                ? prev.scopes.filter(s => s !== scope)
-                : [...prev.scopes, scope]
-        }))
-    }
-
-    const handleAddScope = () => {
-        if (scopeInput.trim() && !formData.scopes.includes(scopeInput.trim())) {
-            setFormData(prev => ({
-                ...prev,
-                scopes: [...prev.scopes, scopeInput.trim()]
-            }))
-            setScopeInput('')
-        }
-    }
-
-    const handleRemoveScope = (scope: string) => {
-        setFormData(prev => ({
-            ...prev,
-            scopes: prev.scopes.filter(s => s !== scope)
-        }))
-    }
-
-    const handleScopeInputKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            e.preventDefault()
-            handleAddScope()
-        }
     }
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -294,86 +276,33 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                         </div>
                     </div>
 
-                    <MultipleUriInput
+                    <UnifiedInputComponent
                         label="重定向 URI"
                         value={formData.redirectUris}
                         onChange={(uris) => handleChange('redirectUris', uris)}
                         placeholder="http://localhost:8080/callback"
+                        quickSelectOptions={COMMON_REDIRECT_URIS}
+                        quickSelectLabel="常用重定向地址"
                     />
 
-                    <MultipleUriInput
+                    <UnifiedInputComponent
                         label="登出重定向 URI"
                         value={formData.postLogoutRedirectUris}
                         onChange={(uris) => handleChange('postLogoutRedirectUris', uris)}
                         placeholder="http://localhost:8080/logout"
+                        quickSelectOptions={COMMON_LOGOUT_REDIRECT_URIS}
+                        quickSelectLabel="常用登出地址"
                     />
 
                     {/* Scopes */}
-                    <div>
-                        <label className="block text-sm font-medium mb-3">权限范围 *</label>
-                        
-                        {/* Current selected scopes */}
-                        {formData.scopes.length > 0 && (
-                            <div className="mb-3">
-                                <div className="text-sm text-gray-600 mb-2">已选择的权限范围:</div>
-                                <div className="flex gap-2 flex-wrap">
-                                    {formData.scopes.map((scope) => (
-                                        <Badge
-                                            key={scope}
-                                            variant="outline"
-                                            className="text-xs px-2 py-1 cursor-pointer hover:bg-red-50 hover:border-red-300"
-                                            onClick={() => handleRemoveScope(scope)}
-                                        >
-                                            {scope}
-                                            <span className="ml-1 text-red-500">×</span>
-                                        </Badge>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Add custom scope */}
-                        <div className="space-y-3">
-                            <div className="flex gap-2">
-                                <Input
-                                    placeholder="输入自定义权限范围 (例如: custom.read, api.access)"
-                                    value={scopeInput}
-                                    onChange={(e) => setScopeInput(e.target.value)}
-                                    onKeyPress={handleScopeInputKeyPress}
-                                    className="flex-1"
-                                />
-                                <Button
-                                    type="button"
-                                    onClick={handleAddScope}
-                                    disabled={!scopeInput.trim() || formData.scopes.includes(scopeInput.trim())}
-                                    size="sm"
-                                    variant="outline"
-                                >
-                                    添加
-                                </Button>
-                            </div>
-                            
-                            {/* Quick select common scopes */}
-                            <div>
-                                <div className="text-sm text-gray-600 mb-2">常用权限范围:</div>
-                                <div className="flex gap-2 flex-wrap">
-                                    {COMMON_SCOPES.map(option => (
-                                        <Button
-                                            key={option.value}
-                                            type="button"
-                                            size="sm"
-                                            variant={formData.scopes.includes(option.value) ? "default" : "outline"}
-                                            onClick={() => handleScopeToggle(option.value)}
-                                            className="text-xs"
-                                            disabled={formData.scopes.includes(option.value)}
-                                        >
-                                            {option.label}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <UnifiedInputComponent
+                        label="权限范围 *"
+                        value={formData.scopes}
+                        onChange={(scopes) => handleChange('scopes', scopes)}
+                        placeholder="输入自定义权限范围 (例如: custom.read, api.access)"
+                        quickSelectOptions={COMMON_SCOPES}
+                        quickSelectLabel="常用权限范围"
+                    />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>

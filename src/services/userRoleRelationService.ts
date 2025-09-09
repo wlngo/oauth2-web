@@ -39,14 +39,14 @@ export interface UpdateUserRoleRelationRequest {
 
 // Get all user role relations with pagination
 export async function getUserRoleRelations(page: number = 1, size: number = 10, userId?: string, roleId?: string): Promise<PaginatedResponse<UserRoleRelation>> {
-    const params: Record<string, string | number> = {
+    const params: Record<string, string | number | boolean> = {
         page: page,
         size: size
     }
     if (userId) params.userId = userId
     if (roleId) params.roleId = roleId
 
-    const response = await getRequest<ApiResponse<PaginatedResponse<UserRoleRelation>>>('/api/user-role-relations/list', params as any)
+    const response = await getRequest<ApiResponse<PaginatedResponse<UserRoleRelation>>>('/api/user-role-relations/list', params)
 
     if (response.code !== 200) {
         throw new Error(response.msg || 'Failed to fetch user role relations')
