@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test files
+src/page/oauth2ClientTest.tsx
+src/routes/oauth2ClientTest.ts

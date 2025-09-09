@@ -10,6 +10,7 @@ import {roleManagementRoute} from './roleManagement'
 import {permissionManagementRoute} from './permissionManagement'
 import {oauth2ClientManagementRoute} from './oauth2ClientManagement'
 import {oauth2ClientDemoRoute} from './oauth2ClientDemo'
+import {oauth2ClientTestRoute} from './oauth2ClientTest'
 import {oauth2ScopeTestRoute} from './oauth2ScopeTest'
 import {rootRoute} from './router'
 import {createRouter, createHashHistory,createBrowserHistory} from '@tanstack/react-router'
@@ -30,6 +31,7 @@ export const routeTree = rootRoute.addChildren([
     permissionManagementRoute,
     oauth2ClientManagementRoute,
     oauth2ClientDemoRoute,
+    oauth2ClientTestRoute,
     oauth2ScopeTestRoute
 ])
 
