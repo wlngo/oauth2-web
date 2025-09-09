@@ -129,6 +129,23 @@ const getDefaultClientSettings = () => ({
     tokenEndpointAuthenticationSigningAlgorithm: null
 })
 
+// Default token settings structure based on requirements
+const getDefaultTokenSettings = () => ({
+    authorizationCodeTimeToLive: 300, // seconds
+    accessTokenTimeToLive: 300, // seconds
+    accessTokenFormat: 'self-contained', // 'self-contained' | 'reference'
+    deviceCodeTimeToLive: 300, // seconds
+    isReuseRefreshTokens: true,
+    refreshTokenTimeToLive: 3600, // seconds
+    idTokenSignatureAlgorithm: 'RS256' // SignatureAlgorithm enum value
+})
+
+// Access Token Format options
+const ACCESS_TOKEN_FORMAT_OPTIONS = [
+    { value: 'self-contained', label: 'Self-contained', description: '自包含令牌格式' },
+    { value: 'reference', label: 'Reference', description: '引用令牌格式' }
+]
+
 interface LogoutResponse {
     code: number
     msg?: string
@@ -172,6 +189,37 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         }
     }
 
+    // Parse existing token settings or use defaults
+    const parseTokenSettings = (settingsJson?: string) => {
+        try {
+            if (settingsJson && settingsJson !== '{}') {
+                const parsed = JSON.parse(settingsJson)
+                
+                // Handle the Spring Boot format with class name arrays
+                const extractValue = (field: unknown) => {
+                    if (Array.isArray(field) && field.length === 2) {
+                        return field[1] // Take the value, ignore the class name
+                    }
+                    return field
+                }
+                
+                return {
+                    authorizationCodeTimeToLive: extractValue(parsed.authorizationCodeTimeToLive) || 300,
+                    accessTokenTimeToLive: extractValue(parsed.accessTokenTimeToLive) || 300,
+                    accessTokenFormat: parsed.accessTokenFormat || 'self-contained',
+                    deviceCodeTimeToLive: extractValue(parsed.deviceCodeTimeToLive) || 300,
+                    isReuseRefreshTokens: parsed.isReuseRefreshTokens ?? true,
+                    refreshTokenTimeToLive: extractValue(parsed.refreshTokenTimeToLive) || 3600,
+                    idTokenSignatureAlgorithm: extractValue(parsed.idTokenSignatureAlgorithm) || 'RS256'
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to parse token settings JSON:', e)
+        }
+        // Return defaults if parsing fails or no settings provided
+        return getDefaultTokenSettings()
+    }
+
     const [formData, setFormData] = useState({
         clientId: client?.clientId || '',
         clientName: client?.clientName || '',
@@ -180,12 +228,14 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         authorizationGrantTypes: client?.authorizationGrantTypes?.split(',').map(t => t.trim()) || [GRANT_TYPES.AUTHORIZATION_CODE, GRANT_TYPES.REFRESH_TOKEN],
         redirectUris: client?.redirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
         postLogoutRedirectUris: client?.postLogoutRedirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
-        scopes: client?.scopes?.split(',').map(s => s.trim()) || ['read', 'write'],
-        tokenSettings: client?.tokenSettings || '{}'
+        scopes: client?.scopes?.split(',').map(s => s.trim()) || ['read', 'write']
     })
 
     // Separate client settings state
     const [clientSettingsData, setClientSettingsData] = useState(parseClientSettings(client?.clientSettings))
+    
+    // Separate token settings state
+    const [tokenSettingsData, setTokenSettingsData] = useState(parseTokenSettings(client?.tokenSettings))
     
     // Add state for scope input field
     const [scopeInput, setScopeInput] = useState('')
@@ -249,6 +299,10 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         setClientSettingsData(prev => ({ ...prev, [field]: value }))
     }
 
+    const handleTokenSettingChange = (field: string, value: string | number | boolean) => {
+        setTokenSettingsData(prev => ({ ...prev, [field]: value }))
+    }
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         
@@ -263,6 +317,17 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
             })
         })
         
+        // Serialize token settings back to JSON with Spring Boot format
+        const tokenSettingsJson = JSON.stringify({
+            authorizationCodeTimeToLive: ['java.time.Duration', tokenSettingsData.authorizationCodeTimeToLive],
+            accessTokenTimeToLive: ['java.time.Duration', tokenSettingsData.accessTokenTimeToLive],
+            accessTokenFormat: tokenSettingsData.accessTokenFormat,
+            deviceCodeTimeToLive: ['java.time.Duration', tokenSettingsData.deviceCodeTimeToLive],
+            isReuseRefreshTokens: tokenSettingsData.isReuseRefreshTokens,
+            refreshTokenTimeToLive: ['java.time.Duration', tokenSettingsData.refreshTokenTimeToLive],
+            idTokenSignatureAlgorithm: ['org.springframework.security.oauth2.jose.jws.SignatureAlgorithm', tokenSettingsData.idTokenSignatureAlgorithm]
+        })
+        
         const submitData = {
             ...formData,
             clientAuthenticationMethods: formData.clientAuthenticationMethods.join(','),
@@ -270,7 +335,8 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
             redirectUris: formData.redirectUris.join(','),
             postLogoutRedirectUris: formData.postLogoutRedirectUris.join(','),
             scopes: formData.scopes.join(','),
-            clientSettings: clientSettingsJson
+            clientSettings: clientSettingsJson,
+            tokenSettings: tokenSettingsJson
         }
         
         if (client?.id) {
@@ -533,13 +599,142 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                         </div>
                     </div>
 
+                    {/* Token Settings */}
                     <div>
-                        <label className="block text-sm font-medium mb-2">令牌设置 (JSON)</label>
-                        <Input
-                            value={formData.tokenSettings}
-                            onChange={(e) => handleChange('tokenSettings', e.target.value)}
-                            placeholder="{}"
-                        />
+                        <label className="block text-sm font-medium mb-3">令牌设置</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {/* Duration settings */}
+                            <div className="p-3 rounded-lg border border-gray-200">
+                                <div>
+                                    <div className="font-medium text-sm">授权码有效期</div>
+                                    <div className="text-xs text-gray-500 font-mono">authorizationCodeTimeToLive: {tokenSettingsData.authorizationCodeTimeToLive}s</div>
+                                    <div className="text-xs text-gray-400 mt-1">授权码的有效期（秒）</div>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={tokenSettingsData.authorizationCodeTimeToLive}
+                                        onChange={(e) => handleTokenSettingChange('authorizationCodeTimeToLive', parseInt(e.target.value) || 300)}
+                                        placeholder="300"
+                                        className="text-sm mt-2"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="p-3 rounded-lg border border-gray-200">
+                                <div>
+                                    <div className="font-medium text-sm">访问令牌有效期</div>
+                                    <div className="text-xs text-gray-500 font-mono">accessTokenTimeToLive: {tokenSettingsData.accessTokenTimeToLive}s</div>
+                                    <div className="text-xs text-gray-400 mt-1">访问令牌的有效期（秒）</div>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={tokenSettingsData.accessTokenTimeToLive}
+                                        onChange={(e) => handleTokenSettingChange('accessTokenTimeToLive', parseInt(e.target.value) || 300)}
+                                        placeholder="300"
+                                        className="text-sm mt-2"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="p-3 rounded-lg border border-gray-200">
+                                <div>
+                                    <div className="font-medium text-sm">设备码有效期</div>
+                                    <div className="text-xs text-gray-500 font-mono">deviceCodeTimeToLive: {tokenSettingsData.deviceCodeTimeToLive}s</div>
+                                    <div className="text-xs text-gray-400 mt-1">设备码的有效期（秒）</div>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={tokenSettingsData.deviceCodeTimeToLive}
+                                        onChange={(e) => handleTokenSettingChange('deviceCodeTimeToLive', parseInt(e.target.value) || 300)}
+                                        placeholder="300"
+                                        className="text-sm mt-2"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="p-3 rounded-lg border border-gray-200">
+                                <div>
+                                    <div className="font-medium text-sm">刷新令牌有效期</div>
+                                    <div className="text-xs text-gray-500 font-mono">refreshTokenTimeToLive: {tokenSettingsData.refreshTokenTimeToLive}s</div>
+                                    <div className="text-xs text-gray-400 mt-1">刷新令牌的有效期（秒）</div>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={tokenSettingsData.refreshTokenTimeToLive}
+                                        onChange={(e) => handleTokenSettingChange('refreshTokenTimeToLive', parseInt(e.target.value) || 3600)}
+                                        placeholder="3600"
+                                        className="text-sm mt-2"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Boolean setting */}
+                            <Checkbox
+                                id="isReuseRefreshTokens"
+                                checked={tokenSettingsData.isReuseRefreshTokens}
+                                onChange={(checked) => handleTokenSettingChange('isReuseRefreshTokens', checked)}
+                            >
+                                <div>
+                                    <div className="font-medium text-sm">重用刷新令牌</div>
+                                    <div className="text-xs text-gray-500 font-mono">isReuseRefreshTokens: {tokenSettingsData.isReuseRefreshTokens ? 'true' : 'false'}</div>
+                                    <div className="text-xs text-gray-400 mt-1">是否重用刷新令牌</div>
+                                </div>
+                            </Checkbox>
+
+                            {/* Access Token Format */}
+                            <div className="p-3 rounded-lg border border-gray-200">
+                                <div>
+                                    <div className="font-medium text-sm">访问令牌格式</div>
+                                    <div className="text-xs text-gray-500 font-mono">accessTokenFormat: "{tokenSettingsData.accessTokenFormat}"</div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                        {tokenSettingsData.accessTokenFormat === 'self-contained' ? (
+                                            '🔒 自包含令牌格式'
+                                        ) : (
+                                            '🔗 引用令牌格式'
+                                        )}
+                                    </div>
+                                    <Select
+                                        id="accessTokenFormat"
+                                        value={tokenSettingsData.accessTokenFormat}
+                                        onChange={(e) => handleTokenSettingChange('accessTokenFormat', e.target.value)}
+                                        className="text-sm mt-2"
+                                    >
+                                        {ACCESS_TOKEN_FORMAT_OPTIONS.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* ID Token Signature Algorithm */}
+                            <div className="p-3 rounded-lg border border-gray-200">
+                                <div>
+                                    <div className="font-medium text-sm">ID令牌签名算法</div>
+                                    <div className="text-xs text-gray-500 font-mono">idTokenSignatureAlgorithm: "{tokenSettingsData.idTokenSignatureAlgorithm}"</div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                        {tokenSettingsData.idTokenSignatureAlgorithm ? (
+                                            `🔐 ${SIGNATURE_ALGORITHM_OPTIONS.find(opt => opt.value === tokenSettingsData.idTokenSignatureAlgorithm)?.description || 'ID Token签名算法'}`
+                                        ) : (
+                                            'ℹ️ 未选择签名算法，将使用默认配置'
+                                        )}
+                                    </div>
+                                    <Select
+                                        id="idTokenSignatureAlgorithm"
+                                        value={tokenSettingsData.idTokenSignatureAlgorithm || ''}
+                                        onChange={(e) => handleTokenSettingChange('idTokenSignatureAlgorithm', e.target.value || 'RS256')}
+                                        className="text-sm mt-2"
+                                    >
+                                        {SIGNATURE_ALGORITHM_OPTIONS.filter(opt => opt.value !== '').map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4">
@@ -732,6 +927,79 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                                             <div className="text-xs text-gray-500 mt-1">🛡️ 用于TLS客户端认证</div>
                                         </div>
                                     )}
+                                </div>
+                            )
+                        })()}
+                    </div>
+
+                    {/* Token Settings Display */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">令牌设置</label>
+                        {(() => {
+                            const parseTokenSettingsForDisplay = (settingsJson?: string) => {
+                                try {
+                                    if (settingsJson && settingsJson !== '{}') {
+                                        return JSON.parse(settingsJson)
+                                    }
+                                } catch (e) {
+                                    console.warn('Failed to parse token settings JSON:', e)
+                                }
+                                return getDefaultTokenSettings()
+                            }
+                            
+                            const tokenSettings = parseTokenSettingsForDisplay(client.tokenSettings)
+                            
+                            // Helper function to extract values from Spring Boot format
+                            const extractValue = (field: unknown) => {
+                                if (Array.isArray(field) && field.length === 2) {
+                                    return field[1] // Take the value, ignore the class name
+                                }
+                                return field
+                            }
+
+                            return (
+                                <div className="bg-gray-50 p-3 rounded space-y-2">
+                                    <div>
+                                        <span className="text-sm font-medium">授权码有效期: </span>
+                                        <span className="text-sm font-mono">{extractValue(tokenSettings.authorizationCodeTimeToLive)}秒</span>
+                                        <span className="text-xs text-gray-500 ml-2">(授权码过期时间)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">访问令牌有效期: </span>
+                                        <span className="text-sm font-mono">{extractValue(tokenSettings.accessTokenTimeToLive)}秒</span>
+                                        <span className="text-xs text-gray-500 ml-2">(访问令牌过期时间)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">设备码有效期: </span>
+                                        <span className="text-sm font-mono">{extractValue(tokenSettings.deviceCodeTimeToLive)}秒</span>
+                                        <span className="text-xs text-gray-500 ml-2">(设备码过期时间)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">刷新令牌有效期: </span>
+                                        <span className="text-sm font-mono">{extractValue(tokenSettings.refreshTokenTimeToLive)}秒</span>
+                                        <span className="text-xs text-gray-500 ml-2">(刷新令牌过期时间)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">重用刷新令牌: </span>
+                                        <span className="text-sm font-mono">{tokenSettings.isReuseRefreshTokens ? 'true' : 'false'}</span>
+                                        <span className="text-xs text-gray-500 ml-2">({tokenSettings.isReuseRefreshTokens ? '重用' : '不重用'}刷新令牌)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">访问令牌格式: </span>
+                                        <span className="text-sm font-mono">"{tokenSettings.accessTokenFormat}"</span>
+                                        <span className="text-xs text-gray-500 ml-2">
+                                            ({tokenSettings.accessTokenFormat === 'self-contained' ? '自包含格式' : '引用格式'})
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">ID令牌签名算法: </span>
+                                        <span className="text-sm font-mono">"{extractValue(tokenSettings.idTokenSignatureAlgorithm)}"</span>
+                                        {extractValue(tokenSettings.idTokenSignatureAlgorithm) && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                🔐 {SIGNATURE_ALGORITHM_OPTIONS.find(opt => opt.value === extractValue(tokenSettings.idTokenSignatureAlgorithm))?.description || 'ID Token签名算法'}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )
                         })()}
