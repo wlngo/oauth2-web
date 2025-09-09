@@ -106,6 +106,14 @@ const COMMON_SCOPES = [
     { value: 'phone', label: '电话号码', description: '获取用户的电话号码' }
 ]
 
+// Default client settings structure based on requirements
+const getDefaultClientSettings = () => ({
+    isRequireProofKey: false,
+    isRequireAuthorizationConsent: false,
+    jwkSetUrl: null,
+    tokenEndpointAuthenticationSigningAlgorithm: null
+})
+
 interface LogoutResponse {
     code: number
     msg?: string
@@ -130,7 +138,7 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         redirectUris: client?.redirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
         postLogoutRedirectUris: client?.postLogoutRedirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
         scopes: client?.scopes?.split(',').map(s => s.trim()) || ['read', 'write'],
-        clientSettings: client?.clientSettings || '{}',
+        clientSettings: client?.clientSettings || JSON.stringify(getDefaultClientSettings(), null, 2),
         tokenSettings: client?.tokenSettings || '{}'
     })
     
@@ -378,11 +386,16 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-2">客户端设置 (JSON)</label>
-                            <Input
+                            <textarea
                                 value={formData.clientSettings}
                                 onChange={(e) => handleChange('clientSettings', e.target.value)}
-                                placeholder="{}"
+                                placeholder={JSON.stringify(getDefaultClientSettings(), null, 2)}
+                                rows={6}
+                                className="flex w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-vertical"
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                                支持的签名算法: RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512
+                            </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">令牌设置 (JSON)</label>
