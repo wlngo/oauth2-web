@@ -349,7 +349,7 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                                     size="sm"
                                     variant="outline"
                                 >
-                                    <Plus className="h-4 w-4" />
+                                    添加
                                 </Button>
                             </div>
                             
