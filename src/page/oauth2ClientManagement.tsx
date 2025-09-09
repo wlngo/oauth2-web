@@ -19,6 +19,7 @@ import {
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
+import {Select} from "@/components/ui/select"
 import {
     Table,
     TableBody,
@@ -104,6 +105,20 @@ const COMMON_SCOPES = [
     { value: 'email', label: '邮箱地址', description: '获取用户邮箱地址' },
     { value: 'address', label: '地址信息', description: '获取用户的地址信息' },
     { value: 'phone', label: '电话号码', description: '获取用户的电话号码' }
+]
+
+// Signature Algorithm options for dropdown
+const SIGNATURE_ALGORITHM_OPTIONS = [
+    { value: '', label: '请选择签名算法', description: '' },
+    { value: 'RS256', label: 'RS256 - RSA + SHA-256', description: 'RSA 算法配合 SHA-256 哈希' },
+    { value: 'RS384', label: 'RS384 - RSA + SHA-384', description: 'RSA 算法配合 SHA-384 哈希' },
+    { value: 'RS512', label: 'RS512 - RSA + SHA-512', description: 'RSA 算法配合 SHA-512 哈希' },
+    { value: 'ES256', label: 'ES256 - ECDSA + SHA-256', description: 'ECDSA 椭圆曲线算法配合 SHA-256 哈希' },
+    { value: 'ES384', label: 'ES384 - ECDSA + SHA-384', description: 'ECDSA 椭圆曲线算法配合 SHA-384 哈希' },
+    { value: 'ES512', label: 'ES512 - ECDSA + SHA-512', description: 'ECDSA 椭圆曲线算法配合 SHA-512 哈希' },
+    { value: 'PS256', label: 'PS256 - RSA-PSS + SHA-256', description: 'RSA-PSS 算法配合 SHA-256 哈希' },
+    { value: 'PS384', label: 'PS384 - RSA-PSS + SHA-384', description: 'RSA-PSS 算法配合 SHA-384 哈希' },
+    { value: 'PS512', label: 'PS512 - RSA-PSS + SHA-512', description: 'RSA-PSS 算法配合 SHA-512 哈希' }
 ]
 
 // Default client settings structure based on requirements
@@ -487,17 +502,23 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
 
                                 <div>
                                     <label htmlFor="tokenEndpointAuthenticationSigningAlgorithm" className="block text-sm font-medium mb-1">
-                                        tokenEndpointAuthenticationSigningAlgorithm: <span className="text-gray-600">{clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm ? `"${clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm}"` : 'null'}</span>
+                                        签名算法: <span className="text-gray-600">{clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm ? `"${clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm}"` : 'null'}</span>
                                     </label>
-                                    <Input
+                                    <Select
                                         id="tokenEndpointAuthenticationSigningAlgorithm"
                                         value={clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm}
                                         onChange={(e) => handleClientSettingChange('tokenEndpointAuthenticationSigningAlgorithm', e.target.value)}
-                                        placeholder="签名算法（可选）"
                                         className="text-sm"
-                                    />
+                                    >
+                                        {SIGNATURE_ALGORITHM_OPTIONS.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </Select>
                                     <div className="text-xs text-gray-500 mt-1">
-                                        支持的算法: RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512
+                                        {clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm && 
+                                         SIGNATURE_ALGORITHM_OPTIONS.find(opt => opt.value === clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm)?.description}
                                     </div>
                                 </div>
 
@@ -702,10 +723,12 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                                         )}
                                     </div>
                                     <div>
-                                        <span className="text-sm font-medium">tokenEndpointAuthenticationSigningAlgorithm:</span>
+                                        <span className="text-sm font-medium">签名算法:</span>
                                         <span className="ml-2 text-sm text-gray-600">{clientSettings.tokenEndpointAuthenticationSigningAlgorithm || 'null'}</span>
                                         {clientSettings.tokenEndpointAuthenticationSigningAlgorithm && (
-                                            <span className="ml-2 text-xs text-gray-500">(Token认证签名算法)</span>
+                                            <span className="ml-2 text-xs text-gray-500">
+                                                ({SIGNATURE_ALGORITHM_OPTIONS.find(opt => opt.value === clientSettings.tokenEndpointAuthenticationSigningAlgorithm)?.description || 'Token认证签名算法'})
+                                            </span>
                                         )}
                                     </div>
                                     {clientSettings['x509-certificate-subject-dn'] && (
