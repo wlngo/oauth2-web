@@ -19,7 +19,7 @@ import {
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
-import {Select} from "@/components/ui/select"
+
 import {
     Table,
     TableBody,
@@ -145,32 +145,7 @@ interface OAuth2ClientFormProps {
 function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2ClientFormProps) {
     const isEditMode = !!client
     
-    // Parse existing client settings or use defaults
-    const parseClientSettings = (settingsJson?: string) => {
-        try {
-            if (settingsJson) {
-                const parsed = JSON.parse(settingsJson)
-                return {
-                    isRequireProofKey: parsed.isRequireProofKey || false,
-                    isRequireAuthorizationConsent: parsed.isRequireAuthorizationConsent || false,
-                    jwkSetUrl: parsed.jwkSetUrl || '',
-                    tokenEndpointAuthenticationSigningAlgorithm: parsed.tokenEndpointAuthenticationSigningAlgorithm || '',
-                    x509CertificateSubjectDn: parsed['x509-certificate-subject-dn'] || ''
-                }
-            }
-        } catch (e) {
-            console.warn('Failed to parse client settings JSON:', e)
-        }
-        // Return defaults if parsing fails or no settings provided
-        const defaults = getDefaultClientSettings()
-        return {
-            isRequireProofKey: defaults.isRequireProofKey,
-            isRequireAuthorizationConsent: defaults.isRequireAuthorizationConsent,
-            jwkSetUrl: '',
-            tokenEndpointAuthenticationSigningAlgorithm: '',
-            x509CertificateSubjectDn: ''
-        }
-    }
+
 
     const [formData, setFormData] = useState({
         clientId: client?.clientId || '',
@@ -184,8 +159,7 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         tokenSettings: client?.tokenSettings || '{}'
     })
 
-    // Separate client settings state
-    const [clientSettingsData, setClientSettingsData] = useState(parseClientSettings(client?.clientSettings))
+
     
     // Add state for scope input field
     const [scopeInput, setScopeInput] = useState('')
@@ -245,23 +219,14 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         }
     }
 
-    const handleClientSettingChange = (field: string, value: string | boolean | null) => {
-        setClientSettingsData(prev => ({ ...prev, [field]: value }))
-    }
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         
-        // Serialize client settings back to JSON
-        const clientSettingsJson = JSON.stringify({
-            isRequireProofKey: clientSettingsData.isRequireProofKey,
-            isRequireAuthorizationConsent: clientSettingsData.isRequireAuthorizationConsent,
-            jwkSetUrl: clientSettingsData.jwkSetUrl || null,
-            tokenEndpointAuthenticationSigningAlgorithm: clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm || null,
-            ...(clientSettingsData.x509CertificateSubjectDn && {
-                'x509-certificate-subject-dn': clientSettingsData.x509CertificateSubjectDn
-            })
-        })
+        // Serialize client settings back to JSON using defaults
+        const defaultSettings = getDefaultClientSettings()
+        const clientSettingsJson = JSON.stringify(defaultSettings)
         
         const submitData = {
             ...formData,
@@ -445,114 +410,7 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                         </div>
                     </div>
 
-                    {/* Client Settings - Replace JSON with structured form */}
-                    <div>
-                        <label className="block text-sm font-medium mb-3">客户端设置</label>
-                        <div className="space-y-6 p-6 border rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 shadow-sm">
-                            {/* Boolean settings as checkboxes */}
-                            <div className="space-y-4">
-                                <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm">
-                                    <div className="flex items-center space-x-3">
-                                        <input
-                                            type="checkbox"
-                                            id="isRequireProofKey"
-                                            checked={clientSettingsData.isRequireProofKey}
-                                            onChange={(e) => handleClientSettingChange('isRequireProofKey', e.target.checked)}
-                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                        />
-                                        <div className="flex-1">
-                                            <label htmlFor="isRequireProofKey" className="text-sm font-semibold text-gray-700">
-                                                需要 PKCE 验证 <span className="font-mono text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">{clientSettingsData.isRequireProofKey ? 'true' : 'false'}</span>
-                                            </label>
-                                            <div className="text-xs text-gray-600 mt-1">
-                                                控制是否需要 PKCE (Proof Key for Code Exchange) 验证，提高授权码模式的安全性
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm">
-                                    <div className="flex items-center space-x-3">
-                                        <input
-                                            type="checkbox"
-                                            id="isRequireAuthorizationConsent"
-                                            checked={clientSettingsData.isRequireAuthorizationConsent}
-                                            onChange={(e) => handleClientSettingChange('isRequireAuthorizationConsent', e.target.checked)}
-                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                        />
-                                        <div className="flex-1">
-                                            <label htmlFor="isRequireAuthorizationConsent" className="text-sm font-semibold text-gray-700">
-                                                需要授权同意确认 <span className="font-mono text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">{clientSettingsData.isRequireAuthorizationConsent ? 'true' : 'false'}</span>
-                                            </label>
-                                            <div className="text-xs text-gray-600 mt-1">
-                                                控制是否需要用户授权同意确认，让用户明确知道授权的权限范围
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* String settings as inputs */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm">
-                                    <label htmlFor="jwkSetUrl" className="block text-sm font-semibold text-gray-700 mb-2">
-                                        JWK 密钥集合 URL <span className="font-mono text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded ml-2">{clientSettingsData.jwkSetUrl ? `"${clientSettingsData.jwkSetUrl}"` : 'null'}</span>
-                                    </label>
-                                    <Input
-                                        id="jwkSetUrl"
-                                        value={clientSettingsData.jwkSetUrl}
-                                        onChange={(e) => handleClientSettingChange('jwkSetUrl', e.target.value)}
-                                        placeholder="https://example.com/.well-known/jwks.json（可选）"
-                                        className="text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-200"
-                                    />
-                                    <div className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded border">
-                                        💡 JWK Set URL，用于获取公钥验证 JWT 令牌的数字签名
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm">
-                                    <label htmlFor="tokenEndpointAuthenticationSigningAlgorithm" className="block text-sm font-semibold text-gray-700 mb-2">
-                                        令牌端点认证签名算法 <span className="font-mono text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded ml-2">{clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm || 'null'}</span>
-                                    </label>
-                                    <Select
-                                        id="tokenEndpointAuthenticationSigningAlgorithm"
-                                        value={clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm || ''}
-                                        onChange={(e) => handleClientSettingChange('tokenEndpointAuthenticationSigningAlgorithm', e.target.value || null)}
-                                        className="text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-200"
-                                    >
-                                        {SIGNATURE_ALGORITHM_OPTIONS.map(option => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </Select>
-                                    <div className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded border min-h-[2.5rem] flex items-center">
-                                        {clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm ? (
-                                            <span>🔐 {SIGNATURE_ALGORITHM_OPTIONS.find(opt => opt.value === clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm)?.description}</span>
-                                        ) : (
-                                            <span>ℹ️ 未选择签名算法，将使用默认配置</span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="lg:col-span-2 bg-white rounded-lg p-4 border border-blue-100 shadow-sm">
-                                    <label htmlFor="x509CertificateSubjectDn" className="block text-sm font-semibold text-gray-700 mb-2">
-                                        X.509 证书主题专有名称 <span className="font-mono text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded ml-2">{clientSettingsData.x509CertificateSubjectDn ? `"${clientSettingsData.x509CertificateSubjectDn}"` : '未设置'}</span>
-                                    </label>
-                                    <Input
-                                        id="x509CertificateSubjectDn"
-                                        value={clientSettingsData.x509CertificateSubjectDn}
-                                        onChange={(e) => handleClientSettingChange('x509CertificateSubjectDn', e.target.value)}
-                                        placeholder="CN=client.example.com,O=Example Corp,C=US（可选）"
-                                        className="text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-200"
-                                    />
-                                    <div className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded border">
-                                        🛡️ 用于 TLS 客户端认证的 X.509 证书主题专有名称，增强客户端身份验证安全性
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <div>
                         <label className="block text-sm font-medium mb-2">令牌设置 (JSON)</label>
