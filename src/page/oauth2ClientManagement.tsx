@@ -129,6 +129,34 @@ interface OAuth2ClientFormProps {
 
 function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2ClientFormProps) {
     const isEditMode = !!client
+    
+    // Parse existing client settings or use defaults
+    const parseClientSettings = (settingsJson?: string) => {
+        try {
+            if (settingsJson) {
+                const parsed = JSON.parse(settingsJson)
+                return {
+                    isRequireProofKey: parsed.isRequireProofKey || false,
+                    isRequireAuthorizationConsent: parsed.isRequireAuthorizationConsent || false,
+                    jwkSetUrl: parsed.jwkSetUrl || '',
+                    tokenEndpointAuthenticationSigningAlgorithm: parsed.tokenEndpointAuthenticationSigningAlgorithm || '',
+                    x509CertificateSubjectDn: parsed['x509-certificate-subject-dn'] || ''
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to parse client settings JSON:', e)
+        }
+        // Return defaults if parsing fails or no settings provided
+        const defaults = getDefaultClientSettings()
+        return {
+            isRequireProofKey: defaults.isRequireProofKey,
+            isRequireAuthorizationConsent: defaults.isRequireAuthorizationConsent,
+            jwkSetUrl: '',
+            tokenEndpointAuthenticationSigningAlgorithm: '',
+            x509CertificateSubjectDn: ''
+        }
+    }
+
     const [formData, setFormData] = useState({
         clientId: client?.clientId || '',
         clientName: client?.clientName || '',
@@ -138,9 +166,11 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         redirectUris: client?.redirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
         postLogoutRedirectUris: client?.postLogoutRedirectUris?.split(',').map(u => u.trim()).filter(u => u) || [],
         scopes: client?.scopes?.split(',').map(s => s.trim()) || ['read', 'write'],
-        clientSettings: client?.clientSettings || JSON.stringify(getDefaultClientSettings(), null, 2),
         tokenSettings: client?.tokenSettings || '{}'
     })
+
+    // Separate client settings state
+    const [clientSettingsData, setClientSettingsData] = useState(parseClientSettings(client?.clientSettings))
     
     // Add state for scope input field
     const [scopeInput, setScopeInput] = useState('')
@@ -200,15 +230,32 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
         }
     }
 
+    const handleClientSettingChange = (field: string, value: string | boolean) => {
+        setClientSettingsData(prev => ({ ...prev, [field]: value }))
+    }
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        
+        // Serialize client settings back to JSON
+        const clientSettingsJson = JSON.stringify({
+            isRequireProofKey: clientSettingsData.isRequireProofKey,
+            isRequireAuthorizationConsent: clientSettingsData.isRequireAuthorizationConsent,
+            jwkSetUrl: clientSettingsData.jwkSetUrl || null,
+            tokenEndpointAuthenticationSigningAlgorithm: clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm || null,
+            ...(clientSettingsData.x509CertificateSubjectDn && {
+                'x509-certificate-subject-dn': clientSettingsData.x509CertificateSubjectDn
+            })
+        })
+        
         const submitData = {
             ...formData,
             clientAuthenticationMethods: formData.clientAuthenticationMethods.join(','),
             authorizationGrantTypes: formData.authorizationGrantTypes.join(','),
             redirectUris: formData.redirectUris.join(','),
             postLogoutRedirectUris: formData.postLogoutRedirectUris.join(','),
-            scopes: formData.scopes.join(',')
+            scopes: formData.scopes.join(','),
+            clientSettings: clientSettingsJson
         }
         
         if (client?.id) {
@@ -383,28 +430,101 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">客户端设置 (JSON)</label>
-                            <textarea
-                                value={formData.clientSettings}
-                                onChange={(e) => handleChange('clientSettings', e.target.value)}
-                                placeholder={JSON.stringify(getDefaultClientSettings(), null, 2)}
-                                rows={6}
-                                className="flex w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-vertical"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                支持的签名算法: RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512
-                            </p>
+                    {/* Client Settings - Replace JSON with structured form */}
+                    <div>
+                        <label className="block text-sm font-medium mb-3">客户端设置</label>
+                        <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                            {/* Boolean settings as checkboxes */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id="isRequireProofKey"
+                                        checked={clientSettingsData.isRequireProofKey}
+                                        onChange={(e) => handleClientSettingChange('isRequireProofKey', e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                    />
+                                    <label htmlFor="isRequireProofKey" className="text-sm font-medium">
+                                        isRequireProofKey: <span className="text-gray-600">{clientSettingsData.isRequireProofKey ? 'true' : 'false'}</span>
+                                    </label>
+                                </div>
+                                <div className="text-xs text-gray-500 md:col-start-1 md:col-end-3">
+                                    控制是否需要 PKCE (Proof Key for Code Exchange) 验证
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id="isRequireAuthorizationConsent"
+                                        checked={clientSettingsData.isRequireAuthorizationConsent}
+                                        onChange={(e) => handleClientSettingChange('isRequireAuthorizationConsent', e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                    />
+                                    <label htmlFor="isRequireAuthorizationConsent" className="text-sm font-medium">
+                                        isRequireAuthorizationConsent: <span className="text-gray-600">{clientSettingsData.isRequireAuthorizationConsent ? 'true' : 'false'}</span>
+                                    </label>
+                                </div>
+                                <div className="text-xs text-gray-500 md:col-start-1 md:col-end-3">
+                                    控制是否需要用户授权同意确认
+                                </div>
+                            </div>
+
+                            {/* String settings as inputs */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="jwkSetUrl" className="block text-sm font-medium mb-1">
+                                        jwkSetUrl: <span className="text-gray-600">{clientSettingsData.jwkSetUrl ? `"${clientSettingsData.jwkSetUrl}"` : 'null'}</span>
+                                    </label>
+                                    <Input
+                                        id="jwkSetUrl"
+                                        value={clientSettingsData.jwkSetUrl}
+                                        onChange={(e) => handleClientSettingChange('jwkSetUrl', e.target.value)}
+                                        placeholder="JWK Set URL（可选）"
+                                        className="text-sm"
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">JWK Set URL，用于获取公钥验证 JWT</div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="tokenEndpointAuthenticationSigningAlgorithm" className="block text-sm font-medium mb-1">
+                                        tokenEndpointAuthenticationSigningAlgorithm: <span className="text-gray-600">{clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm ? `"${clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm}"` : 'null'}</span>
+                                    </label>
+                                    <Input
+                                        id="tokenEndpointAuthenticationSigningAlgorithm"
+                                        value={clientSettingsData.tokenEndpointAuthenticationSigningAlgorithm}
+                                        onChange={(e) => handleClientSettingChange('tokenEndpointAuthenticationSigningAlgorithm', e.target.value)}
+                                        placeholder="签名算法（可选）"
+                                        className="text-sm"
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        支持的算法: RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label htmlFor="x509CertificateSubjectDn" className="block text-sm font-medium mb-1">
+                                        x509-certificate-subject-dn: <span className="text-gray-600">{clientSettingsData.x509CertificateSubjectDn ? `"${clientSettingsData.x509CertificateSubjectDn}"` : '未设置'}</span>
+                                    </label>
+                                    <Input
+                                        id="x509CertificateSubjectDn"
+                                        value={clientSettingsData.x509CertificateSubjectDn}
+                                        onChange={(e) => handleClientSettingChange('x509CertificateSubjectDn', e.target.value)}
+                                        placeholder="X.509 证书主题 DN（可选）"
+                                        className="text-sm"
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">用于 TLS 客户端认证的 X.509 证书主题专有名称</div>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">令牌设置 (JSON)</label>
-                            <Input
-                                value={formData.tokenSettings}
-                                onChange={(e) => handleChange('tokenSettings', e.target.value)}
-                                placeholder="{}"
-                            />
-                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">令牌设置 (JSON)</label>
+                        <Input
+                            value={formData.tokenSettings}
+                            onChange={(e) => handleChange('tokenSettings', e.target.value)}
+                            placeholder="{}"
+                        />
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4">
@@ -542,6 +662,62 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                                 共 {client.scopes?.split(',').length} 个权限范围
                             </div>
                         )}
+                    </div>
+
+                    {/* Client Settings - Structured Display */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-3">客户端设置</label>
+                        {(() => {
+                            // Parse client settings for display
+                            const parseClientSettingsForDisplay = (settingsJson?: string) => {
+                                try {
+                                    if (settingsJson) {
+                                        return JSON.parse(settingsJson)
+                                    }
+                                } catch (e) {
+                                    console.warn('Failed to parse client settings JSON:', e)
+                                }
+                                return getDefaultClientSettings()
+                            }
+                            
+                            const clientSettings = parseClientSettingsForDisplay(client.clientSettings)
+                            
+                            return (
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                                    <div>
+                                        <span className="text-sm font-medium">isRequireProofKey:</span>
+                                        <span className="ml-2 text-sm text-gray-600">{clientSettings.isRequireProofKey ? 'true' : 'false'}</span>
+                                        <span className="ml-2 text-xs text-gray-500">({clientSettings.isRequireProofKey ? '需要' : '不需要'} PKCE 验证)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">isRequireAuthorizationConsent:</span>
+                                        <span className="ml-2 text-sm text-gray-600">{clientSettings.isRequireAuthorizationConsent ? 'true' : 'false'}</span>
+                                        <span className="ml-2 text-xs text-gray-500">({clientSettings.isRequireAuthorizationConsent ? '需要' : '不需要'}用户授权同意)</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">jwkSetUrl:</span>
+                                        <span className="ml-2 text-sm text-gray-600">{clientSettings.jwkSetUrl || 'null'}</span>
+                                        {clientSettings.jwkSetUrl && (
+                                            <span className="ml-2 text-xs text-gray-500">(JWK Set URL)</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium">tokenEndpointAuthenticationSigningAlgorithm:</span>
+                                        <span className="ml-2 text-sm text-gray-600">{clientSettings.tokenEndpointAuthenticationSigningAlgorithm || 'null'}</span>
+                                        {clientSettings.tokenEndpointAuthenticationSigningAlgorithm && (
+                                            <span className="ml-2 text-xs text-gray-500">(Token认证签名算法)</span>
+                                        )}
+                                    </div>
+                                    {clientSettings['x509-certificate-subject-dn'] && (
+                                        <div>
+                                            <span className="text-sm font-medium">x509-certificate-subject-dn:</span>
+                                            <span className="ml-2 text-sm text-gray-600">"{clientSettings['x509-certificate-subject-dn']}"</span>
+                                            <span className="ml-2 text-xs text-gray-500">(X.509证书主题DN)</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })()}
                     </div>
 
                     {client.clientIdIssuedAt && (
