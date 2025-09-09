@@ -524,7 +524,7 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
 
                                 <div className="md:col-span-2">
                                     <label htmlFor="x509CertificateSubjectDn" className="block text-sm font-medium mb-1">
-                                        x509-certificate-subject-dn: <span className="text-gray-600">{clientSettingsData.x509CertificateSubjectDn ? `"${clientSettingsData.x509CertificateSubjectDn}"` : '未设置'}</span>
+                                        X.509 证书主题专有名称: <span className="text-gray-600">{clientSettingsData.x509CertificateSubjectDn ? `"${clientSettingsData.x509CertificateSubjectDn}"` : '未设置'}</span>
                                     </label>
                                     <Input
                                         id="x509CertificateSubjectDn"
@@ -733,7 +733,7 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                                     </div>
                                     {clientSettings['x509-certificate-subject-dn'] && (
                                         <div>
-                                            <span className="text-sm font-medium">x509-certificate-subject-dn:</span>
+                                            <span className="text-sm font-medium">X.509 证书主题专有名称:</span>
                                             <span className="ml-2 text-sm text-gray-600">"{clientSettings['x509-certificate-subject-dn']}"</span>
                                             <span className="ml-2 text-xs text-gray-500">(X.509证书主题DN)</span>
                                         </div>
