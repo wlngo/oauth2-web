@@ -679,9 +679,9 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                         )}
                     </div>
 
-                    {/* Client Settings - Structured Display */}
+                    {/* Client Settings */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-3">客户端设置</label>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">客户端设置</label>
                         {(() => {
                             // Parse client settings for display
                             const parseClientSettingsForDisplay = (settingsJson?: string) => {
@@ -698,38 +698,38 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
                             const clientSettings = parseClientSettingsForDisplay(client.clientSettings)
                             
                             return (
-                                <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-5 rounded-xl border border-blue-100 space-y-4">
-                                    <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                        <span className="text-sm font-semibold text-gray-700">需要 PKCE 验证:</span>
-                                        <span className="ml-2 font-mono text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded">{clientSettings.isRequireProofKey ? 'true' : 'false'}</span>
-                                        <span className="ml-2 text-xs text-gray-600">({clientSettings.isRequireProofKey ? '需要' : '不需要'} PKCE 验证)</span>
+                                <div className="bg-gray-50 p-3 rounded space-y-2">
+                                    <div>
+                                        <span className="text-sm font-medium">需要 PKCE 验证: </span>
+                                        <span className="text-sm font-mono">{clientSettings.isRequireProofKey ? 'true' : 'false'}</span>
+                                        <span className="text-xs text-gray-500 ml-2">({clientSettings.isRequireProofKey ? '需要' : '不需要'} PKCE 验证)</span>
                                     </div>
-                                    <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                        <span className="text-sm font-semibold text-gray-700">需要授权同意确认:</span>
-                                        <span className="ml-2 font-mono text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded">{clientSettings.isRequireAuthorizationConsent ? 'true' : 'false'}</span>
-                                        <span className="ml-2 text-xs text-gray-600">({clientSettings.isRequireAuthorizationConsent ? '需要' : '不需要'}用户授权同意)</span>
+                                    <div>
+                                        <span className="text-sm font-medium">需要授权同意确认: </span>
+                                        <span className="text-sm font-mono">{clientSettings.isRequireAuthorizationConsent ? 'true' : 'false'}</span>
+                                        <span className="text-xs text-gray-500 ml-2">({clientSettings.isRequireAuthorizationConsent ? '需要' : '不需要'}用户授权同意)</span>
                                     </div>
-                                    <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                        <span className="text-sm font-semibold text-gray-700">JWK 密钥集合 URL:</span>
-                                        <span className="ml-2 font-mono text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded break-all">{clientSettings.jwkSetUrl || 'null'}</span>
+                                    <div>
+                                        <span className="text-sm font-medium">JWK 密钥集合 URL: </span>
+                                        <span className="text-sm font-mono break-all">{clientSettings.jwkSetUrl || 'null'}</span>
                                         {clientSettings.jwkSetUrl && (
-                                            <div className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded border">💡 JWK Set URL，用于获取公钥验证 JWT 令牌</div>
+                                            <div className="text-xs text-gray-500 mt-1">💡 用于获取公钥验证 JWT 令牌</div>
                                         )}
                                     </div>
-                                    <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                        <span className="text-sm font-semibold text-gray-700">令牌端点认证签名算法:</span>
-                                        <span className="ml-2 font-mono text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded">{clientSettings.tokenEndpointAuthenticationSigningAlgorithm || 'null'}</span>
+                                    <div>
+                                        <span className="text-sm font-medium">令牌端点认证签名算法: </span>
+                                        <span className="text-sm font-mono">{clientSettings.tokenEndpointAuthenticationSigningAlgorithm || 'null'}</span>
                                         {clientSettings.tokenEndpointAuthenticationSigningAlgorithm && (
-                                            <div className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded border">
+                                            <div className="text-xs text-gray-500 mt-1">
                                                 🔐 {SIGNATURE_ALGORITHM_OPTIONS.find(opt => opt.value === clientSettings.tokenEndpointAuthenticationSigningAlgorithm)?.description || 'Token认证签名算法'}
                                             </div>
                                         )}
                                     </div>
                                     {clientSettings['x509-certificate-subject-dn'] && (
-                                        <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                            <span className="text-sm font-semibold text-gray-700">X.509 证书主题专有名称:</span>
-                                            <span className="ml-2 font-mono text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded break-all">"{clientSettings['x509-certificate-subject-dn']}"</span>
-                                            <div className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded border">🛡️ X.509证书主题专有名称，用于TLS客户端认证</div>
+                                        <div>
+                                            <span className="text-sm font-medium">X.509 证书主题专有名称: </span>
+                                            <span className="text-sm font-mono break-all">"{clientSettings['x509-certificate-subject-dn']}"</span>
+                                            <div className="text-xs text-gray-500 mt-1">🛡️ 用于TLS客户端认证</div>
                                         </div>
                                     )}
                                 </div>
