@@ -14,7 +14,8 @@ import {
     Settings,
     ArrowLeft,
     User,
-    Filter
+    Filter,
+    X
 } from "lucide-react"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
@@ -349,9 +350,14 @@ function OAuth2ClientForm({ client, onSubmit, onCancel, isLoading }: OAuth2Clien
     return (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200">
-                <h3 className="text-lg font-semibold mb-4">
-                    {client ? '编辑 OAuth2 客户端' : '创建 OAuth2 客户端'}
-                </h3>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">
+                        {client ? '编辑 OAuth2 客户端' : '创建 OAuth2 客户端'}
+                    </h3>
+                    <Button variant="ghost" size="sm" onClick={onCancel}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -762,15 +768,15 @@ function OAuth2ClientDetailModal({ client, onClose, onEdit }: OAuth2ClientDetail
     return (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">OAuth2 客户端详情</h3>
-                    <div className="flex gap-2">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">OAuth2 客户端详情</h3>
+                    <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => onEdit(client)}>
                             <Edit className="h-4 w-4 mr-2" />
                             编辑
                         </Button>
-                        <Button variant="outline" size="sm" onClick={onClose}>
-                            关闭
+                        <Button variant="ghost" size="sm" onClick={onClose}>
+                            <X className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
