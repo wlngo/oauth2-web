@@ -1,39 +1,38 @@
-import { X, Trash2, AlertTriangle, Shield, Clock } from "lucide-react"
+import { X, Trash2, AlertTriangle, Shield, Clock, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import type { UserInfo } from "@/services/userService"
 import { useState, useEffect } from "react"
 
-interface DeleteConfirmationModalProps {
-  user: UserInfo
+interface OAuth2Client {
+  id?: string
+  clientId: string
+  clientName: string
+  clientSecret?: string
+  scopes?: string
+  redirectUris?: string
+  grantTypes?: string
+}
+
+interface OAuth2ClientDeleteConfirmationModalProps {
+  client: OAuth2Client
   onConfirm: () => void
   onCancel: () => void
   isLoading?: boolean
   requireTypeConfirm?: boolean
-  typeConfirmText?: string
 }
 
-export function DeleteConfirmationModal({ 
-  user, 
+export function OAuth2ClientDeleteConfirmationModal({ 
+  client, 
   onConfirm, 
   onCancel, 
   isLoading = false,
-  requireTypeConfirm = true,
-  typeConfirmText = "删除"
-}: DeleteConfirmationModalProps) {
+  requireTypeConfirm = true
+}: OAuth2ClientDeleteConfirmationModalProps) {
   const [confirmText, setConfirmText] = useState("")
   const [buttonEnabled, setButtonEnabled] = useState(false)
   const [countdown, setCountdown] = useState(requireTypeConfirm ? 3 : 0)
   
-  const getInitials = (name?: string) => {
-    if (!name) return "U"
-    return name
-      .split(" ")
-      .map(word => word.charAt(0).toUpperCase())
-      .join("")
-      .slice(0, 2)
-  }
+  const typeConfirmText = "删除"
 
   // Countdown timer for button activation
   useEffect(() => {
@@ -79,24 +78,19 @@ export function DeleteConfirmationModal({
         </div>
 
         <div className="space-y-4">
-          {/* User Info Display */}
+          {/* Client Info Display */}
           <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={user.avatarUrl} alt={user.nickName} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                {getInitials(user.nickName || user.realName || user.username)}
-              </AvatarFallback>
-            </Avatar>
+            <Database className="h-8 w-8 text-blue-600 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="font-medium text-gray-900 dark:text-white truncate">
-                {user.nickName || user.realName || user.username}
+                {client.clientName}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                @{user.username}
+              <div className="text-sm text-gray-500 dark:text-gray-400 truncate font-mono">
+                {client.clientId}
               </div>
-              {user.email && (
+              {client.scopes && (
                 <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {user.email}
+                  权限: {client.scopes}
                 </div>
               )}
             </div>
@@ -106,14 +100,15 @@ export function DeleteConfirmationModal({
           <div className="text-gray-700 dark:text-gray-300">
             <div className="flex items-center gap-2 mb-3">
               <Shield className="h-5 w-5 text-red-600" />
-              <p className="font-semibold text-red-800 dark:text-red-400">您即将删除此用户</p>
+              <p className="font-semibold text-red-800 dark:text-red-400">您即将删除此OAuth2客户端</p>
             </div>
             <div className="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 p-3 rounded border-l-4 border-red-500">
               <div className="font-medium mb-2">⚠️ 警告：此操作不可撤销</div>
               <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>用户的所有个人信息将被永久删除</li>
-                <li>相关的角色和权限关联将被移除</li>
-                <li>用户的历史操作记录将被清除</li>
+                <li>客户端的所有配置信息将被永久删除</li>
+                <li>相关的授权令牌将立即失效</li>
+                <li>使用此客户端的应用程序将无法访问</li>
+                <li>重定向URI和授权范围配置将丢失</li>
                 <li>此操作无法恢复，请谨慎确认</li>
               </ul>
             </div>
